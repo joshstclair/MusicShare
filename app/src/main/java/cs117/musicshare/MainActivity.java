@@ -16,6 +16,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.view.MenuItem;
 import android.view.View;
+import android.content.Intent;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
 
 public class MainActivity extends Activity {
 
@@ -42,6 +46,10 @@ public class MainActivity extends Activity {
         }
     }
 
+    public void showBluetooth(View view) {
+        Intent intent = new Intent(this, BluetoothDevices.class);
+        startActivity(intent);
+    }
     public void songPicked(View view){
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         musicSrv.playSong();
@@ -76,6 +84,7 @@ public class MainActivity extends Activity {
         });
         SongAdapter songAdt = new SongAdapter(this, songList);
         songView.setAdapter(songAdt);
+
     }
 
     @Override

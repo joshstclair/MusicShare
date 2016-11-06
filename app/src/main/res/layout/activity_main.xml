@@ -1,16 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
     android:background="#ADD8E6"
-    tools:context=".MainActivity" >
+    tools:context=".MainActivity"
+    android:weightSum="1">
 
     <ListView
         android:id="@+id/song_list"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="431dp"
+        android:layout_weight="0.20">
     </ListView>
+
+    <Button
+        android:text="View Bluetooth Devices"
+        android:layout_width="301dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/Button"
+        style="@style/Widget.AppCompat.Button"
+        android:elevation="12dp"
+        android:onClick="showBluetooth" />
+        android:textColorLink="@android:color/holo_red_light"
+        android:textColor="@color/colorAccent"
+        app:backgroundTint="@color/highlighted_text_material_light"
+        android:background="@color/colorPrimaryDark"
+        android:textColorHighlight="@color/colorAccent" />
 
 </LinearLayout>
