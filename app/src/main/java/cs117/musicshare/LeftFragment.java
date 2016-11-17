@@ -1,34 +1,56 @@
 package cs117.musicshare;
 
-import android.app.Activity;
-import android.os.Bundle;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import android.net.Uri;
-import android.content.ContentResolver;
-import android.database.Cursor;
-import android.support.v4.view.ViewPager;
-import android.support.v7.widget.Toolbar;
-import android.widget.ListView;
-import android.os.IBinder;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
-import android.support.design.widget.TabLayout;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.TableLayout;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ListView;
 
-public class MainActivity extends AppCompatActivity {
-/*
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+
+public class LeftFragment extends Fragment {
+    public LeftFragment() {
+        // Required empty public constructor
+    }
+
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+
+        FrameLayout ll = (FrameLayout) inflater.inflate(R.layout.fragment_left, container, false);
+        songView = (ListView)ll.findViewById(R.id.song_list);
+        songList = new ArrayList<Song>();
+        getSongList();
+        Collections.sort(songList, new Comparator<Song>(){
+            public int compare(Song a, Song b){
+                return a.getTitle().compareTo(b.getTitle());
+            }
+        });
+        SongAdapter songAdt = new SongAdapter(getActivity(), songList);
+        songView.setAdapter(songAdt);
+
+    return ll;
+        //return inflater.inflate(R.layout.fragment_left, container, false);
+    }
+
     public void getSongList() {
-        ContentResolver musicResolver = getContentResolver();
+        ContentResolver musicResolver = getActivity().getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
         if(musicCursor!=null && musicCursor.moveToFirst()){
@@ -50,16 +72,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void showBluetooth(View view) {
-        Intent intent = new Intent(this, BluetoothDevices.class);
-        startActivity(intent);
-    }
-    */
     public void songPicked(View view){
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         musicSrv.playSong();
     }
-/*
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -67,61 +84,32 @@ public class MainActivity extends AppCompatActivity {
                 //shuffle
                 break;
             case R.id.action_end:
-                stopService(playIntent);
+                getActivity().stopService(playIntent);
                 musicSrv=null;
                 System.exit(0);
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
-*/
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        toolbar = (Toolbar)findViewById(R.id.toolBar);
-        setSupportActionBar(toolbar);
-        tabLayout = (TabLayout)findViewById(R.id.tabLayout);
-        viewPager = (ViewPager)findViewById(R.id.viewPager);
-        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
-        viewPagerAdapter.addFragments(new LeftFragment(), "My Music");
-        viewPagerAdapter.addFragments(new MiddleFragment(), "Nearby Music");
-        viewPagerAdapter.addFragments(new RightFragment(), "My Settings");
-        viewPager.setAdapter(viewPagerAdapter);
-        tabLayout.setupWithViewPager(viewPager);
-
-        /*
-        songView = (ListView)findViewById(R.id.song_list);
-        songList = new ArrayList<Song>();
-        getSongList();
-        Collections.sort(songList, new Comparator<Song>(){
-            public int compare(Song a, Song b){
-                return a.getTitle().compareTo(b.getTitle());
-            }
-        });
-        SongAdapter songAdt = new SongAdapter(this, songList);
-        songView.setAdapter(songAdt);
-*/
-    }
 
     @Override
-    protected void onStart() {
+    public void onStart() {
         super.onStart();
-        //if (playIntent == null) {
-            //playIntent = new Intent(this, MusicService.class);
-            //bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            //startService(playIntent);
-        //}
+        //play music
+        if (playIntent == null) {
+            playIntent = new Intent(getActivity(), MusicService.class);
+            getActivity().bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+            getActivity().startService(playIntent);
+        }
     }
 
     @Override
-    protected void onDestroy() {
-        stopService(playIntent);
+    public void onDestroy() {
+        getActivity().stopService(playIntent);
         musicSrv=null;
         super.onDestroy();
     }
-/*
+
     private ServiceConnection musicConnection = new ServiceConnection(){
 
         @Override
@@ -137,11 +125,7 @@ public class MainActivity extends AppCompatActivity {
             musicBound = false;
         }
     };
-*/
-    Toolbar toolbar;
-    TabLayout tabLayout;
-    ViewPager viewPager;
-    ViewPagerAdapter viewPagerAdapter;
+
     private ArrayList<Song> songList;
     private ListView songView;
     private MusicService musicSrv;
