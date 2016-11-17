@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.Toast;
 
 /**
  * Created by joshua on 11/1/16.
@@ -82,6 +83,7 @@ public class MusicService extends Service implements
     }
 
     public void setSong(int songIndex){
+        //Toast.makeText(MusicService.this, "TEST123",Toast.LENGTH_SHORT).show();
         songPosn=songIndex;
     }
 

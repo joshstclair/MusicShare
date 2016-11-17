@@ -24,6 +24,7 @@ import android.support.design.widget.TabLayout;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TableLayout;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 /*
@@ -49,17 +50,18 @@ public class MainActivity extends AppCompatActivity {
             while (musicCursor.moveToNext());
         }
     }
-
+*/
     public void showBluetooth(View view) {
         Intent intent = new Intent(this, BluetoothDevices.class);
         startActivity(intent);
     }
-    */
+
     public void songPicked(View view){
+        //Toast.makeText(MainActivity.this, "TEST123",Toast.LENGTH_SHORT).show();
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         musicSrv.playSong();
     }
-/*
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -74,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-*/
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,9 +92,10 @@ public class MainActivity extends AppCompatActivity {
         viewPagerAdapter.addFragments(new RightFragment(), "My Settings");
         viewPager.setAdapter(viewPagerAdapter);
         tabLayout.setupWithViewPager(viewPager);
+/*
+        songView = (ListView)getSupportFragmentManager().findFragmentById(R.id.LeftFrag).getView().findViewById(R.id.song_list);
 
-        /*
-        songView = (ListView)findViewById(R.id.song_list);
+        //songView = (ListView)findViewById(R.id.song_list);
         songList = new ArrayList<Song>();
         getSongList();
         Collections.sort(songList, new Comparator<Song>(){
@@ -108,11 +111,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        //if (playIntent == null) {
-            //playIntent = new Intent(this, MusicService.class);
-            //bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            //startService(playIntent);
-        //}
+        if (playIntent == null) {
+            playIntent = new Intent(this, MusicService.class);
+            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+            startService(playIntent);
+        }
     }
 
     @Override
@@ -121,13 +124,15 @@ public class MainActivity extends AppCompatActivity {
         musicSrv=null;
         super.onDestroy();
     }
-/*
+
     private ServiceConnection musicConnection = new ServiceConnection(){
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
             musicSrv = binder.getService();
+
+
             musicSrv.setList(songList);
             musicBound = true;
         }
@@ -137,7 +142,9 @@ public class MainActivity extends AppCompatActivity {
             musicBound = false;
         }
     };
-*/
+
+
+
     Toolbar toolbar;
     TabLayout tabLayout;
     ViewPager viewPager;

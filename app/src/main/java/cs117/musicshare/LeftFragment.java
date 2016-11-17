@@ -37,6 +37,7 @@ public class LeftFragment extends Fragment {
         songView = (ListView)ll.findViewById(R.id.song_list);
         songList = new ArrayList<Song>();
         getSongList();
+
         Collections.sort(songList, new Comparator<Song>(){
             public int compare(Song a, Song b){
                 return a.getTitle().compareTo(b.getTitle());
@@ -126,7 +127,13 @@ public class LeftFragment extends Fragment {
         }
     };
 
-    private ArrayList<Song> songList;
+    public ArrayList<Song> returnSongList(){
+        return songList;
+    }
+
+
+    public static void test(){}
+    public ArrayList<Song> songList;
     private ListView songView;
     private MusicService musicSrv;
     private Intent playIntent;

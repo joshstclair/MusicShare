@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="cs117.musicshare.LeftFragment">
+    tools:context="cs117.musicshare.LeftFragment"
+    android:id="@+id/LeftFrag">
 
     <!-- TODO: Update blank fragment layout -->
 
