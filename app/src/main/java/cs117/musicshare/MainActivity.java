@@ -8,6 +8,7 @@ import java.util.Comparator;
 import android.net.Uri;
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.support.v7.widget.Toolbar;
 import android.widget.ListView;
 import android.os.IBinder;
 import android.content.ComponentName;
@@ -21,7 +22,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     public void getSongList() {
         ContentResolver musicResolver = getContentResolver();
@@ -74,6 +75,10 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        toolbar = (Toolbar)findViewById(R.id.toolBar);
+        setSupportActionBar(toolbar);
+
         songView = (ListView)findViewById(R.id.song_list);
         songList = new ArrayList<Song>();
         getSongList();
@@ -119,6 +124,8 @@ public class MainActivity extends Activity {
             musicBound = false;
         }
     };
+
+    Toolbar toolbar;
 
     private ArrayList<Song> songList;
     private ListView songView;
