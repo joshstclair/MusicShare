@@ -1,6 +1,5 @@
 package cs117.musicshare;
 
-import android.app.Activity;
 import android.os.Bundle;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,6 +7,9 @@ import java.util.Comparator;
 import android.net.Uri;
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.widget.ListView;
 import android.os.IBinder;
 import android.content.ComponentName;
@@ -18,7 +20,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.MediaController.MediaPlayerControl;
 
-public class MainActivity extends Activity implements MediaPlayerControl {
+import android.support.design.widget.*;
+
+public class MainActivity extends AppCompatActivity implements MediaPlayerControl {
 
     public void getSongList() {
         ContentResolver musicResolver = getContentResolver();
@@ -43,10 +47,6 @@ public class MainActivity extends Activity implements MediaPlayerControl {
         }
     }
 
-    public void showBluetooth(View view) {
-        Intent intent = new Intent(MainActivity.this, BluetoothDevices.class);
-        startActivity(intent);
-    }
     public void songPicked(View view){
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         musicSrv.playSong();
@@ -149,8 +149,26 @@ public class MainActivity extends Activity implements MediaPlayerControl {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //Tool Bar Setup
+        //-----------------------------------------------
+        toolbar = (Toolbar)findViewById(R.id.toolBar);
+        setSupportActionBar(toolbar);
+        tabLayout = (TabLayout)findViewById(R.id.tabLayout);
+        viewPager = (ViewPager)findViewById(R.id.viewPager);
+        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
+        viewPagerAdapter.addFragments(new LeftFragment(), "My Music");
+        viewPagerAdapter.addFragments(new MiddleFragment(), "Nearby Music");
+        viewPagerAdapter.addFragments(new RightFragment(), "My Settings");
+        viewPager.setAdapter(viewPagerAdapter);
+        tabLayout.setupWithViewPager(viewPager);
+        //-----------------------------------------------
+
+
+        //Generate Song List
+        //-----------------------------------------------
         songView = (ListView)findViewById(R.id.song_list);
-        songList = new ArrayList<Song>();
+        songList = new ArrayList<>();
         getSongList();
 
         // alphabetize songs by title
@@ -162,6 +180,8 @@ public class MainActivity extends Activity implements MediaPlayerControl {
         SongAdapter songAdt = new SongAdapter(this, songList);
         songView.setAdapter(songAdt);
         setController();
+        //-----------------------------------------------
+
     }
 
     @Override
@@ -254,6 +274,17 @@ public class MainActivity extends Activity implements MediaPlayerControl {
         controller.show(0);
     }
 
+    //Tab Layout Variables
+    //-----------------------------------------------
+    Toolbar toolbar;
+    TabLayout tabLayout;
+    ViewPager viewPager;
+    ViewPagerAdapter viewPagerAdapter;
+    //-----------------------------------------------
+
+
+    //Music Player Variables
+    //-----------------------------------------------
     private ArrayList<Song> songList;
     private ListView songView;
     private MusicService musicSrv;
@@ -261,4 +292,5 @@ public class MainActivity extends Activity implements MediaPlayerControl {
     private boolean musicBound=false;
     private MusicController controller;
     private boolean paused=false, playbackPaused=false;
+    //-----------------------------------------------
 }
