@@ -44,7 +44,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
     }
 
     public void showBluetooth(View view) {
-        Intent intent = new Intent(this, BluetoothDevices.class);
+        Intent intent = new Intent(MainActivity.this, BluetoothDevices.class);
         startActivity(intent);
     }
     public void songPicked(View view){

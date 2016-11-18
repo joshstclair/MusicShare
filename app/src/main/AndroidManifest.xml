@@ -28,7 +28,18 @@
 
         <service android:name=".MusicService" />
 
-        <activity android:name=".BluetoothDevices"></activity>
+        <activity android:name=".BluetoothDevices">
+            <intent-filter>
+                <action android:name="android.intent.action.BluetoothDevices" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".DeviceList">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"
+                    android:launchMode = "singleTask"/>
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

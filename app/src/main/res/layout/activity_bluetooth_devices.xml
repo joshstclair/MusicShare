@@ -9,13 +9,10 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+
     tools:context="cs117.musicshare.BluetoothDevices"
     app:backgroundTint="@color/colorPrimary">
-    <ListView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/listView"
-        android:layout_below="@+id/textView" />
+
     <Button
         android:text="Back to Music"
         android:layout_width="wrap_content"
@@ -27,14 +24,49 @@
         android:layout_alignParentEnd="true" />
 
     <TextView
-        android:text="Bluetooth Devices in Range"
+        android:text="Settings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:id="@+id/textView"
         android:textSize="18sp"
-        android:textColor="@color/colorPrimary" />
+        android:textColor="@color/colorPrimary"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:id="@+id/button_scan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:text="scan devices"
+        android:layout_marginTop="41dp"
+        android:layout_below="@+id/textView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <ListView
+        android:id="@+id/bluelist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#4A9C67"
+        android:layout_marginTop="36dp"
+        android:layout_below="@+id/btList"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+        android:visible="false"
+    </ListView>
+
+    <TextView
+        android:text="Currently paired devices"
+        android:gravity="center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/btList"
+        android:textSize="18sp"
+        android:textColor="@color/colorPrimary"
+        android:layout_marginTop="23dp"
+        android:layout_below="@+id/button_scan"
+        android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>
