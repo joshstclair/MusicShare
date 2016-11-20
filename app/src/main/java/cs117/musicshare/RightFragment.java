@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
@@ -56,6 +57,7 @@ public class RightFragment extends Fragment {
         mScan_button = (Button) view.findViewById(R.id.button_scan);
         mbt_status = (TextView) view.findViewById(R.id.btList);
         btViewList= (ListView) view.findViewById(R.id.bluelist);
+        on_button = (Button) view.findViewById(R.id.buttonOn);
 
         //get bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -104,17 +106,26 @@ public class RightFragment extends Fragment {
             }
         });
 
+        //turn on/off bluetooth
+        on_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mBluetoothAdapter.isEnabled()) {
+                    mBluetoothAdapter.disable();
+                    showDisabled();
+                } else {
+                    Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(intent, 1000);
+                }
+            }
+        });
         //if Bluetooth is on
-        if (!mBluetoothAdapter.isEnabled()) {
-            bt_dialog.show();
-            View view2 = getActivity().getWindow().getDecorView();
-            view2.setBackgroundColor(0xFFFF69B4);
-            mScan_button.setEnabled(false);
+        if (mBluetoothAdapter.isEnabled()) {
+            showEnabled();
             showPaired(view);
         }
         else{
-            showEnabled();
-            //showPaired();
+            showDisabled();
         }
         IntentFilter filter = new IntentFilter();
 
@@ -137,10 +148,20 @@ public class RightFragment extends Fragment {
 
     //if bluetooth is on
     private void showEnabled() {
+        on_button.setText("Turn off Bluetooth");
         bt_dialog.dismiss();
         View view = getActivity().getWindow().getDecorView();
-        view.setBackgroundColor(0xFFADD8E6);
+        //view.setBackgroundColor(0xFFADD8A7);//0xFFADD8E6
         mScan_button.setEnabled(true);
+        mbt_status.setVisibility(view.VISIBLE);
+    }
+    //if bluetooth is off
+    private void showDisabled() {
+        View view = getActivity().getWindow().getDecorView();
+        //view.setBackgroundColor(0xFFADD8A7);
+        on_button.setText("Turn on Bluetooth");
+        mScan_button.setEnabled(false);
+        mbt_status.setVisibility(view.INVISIBLE);
     }
 
     private void showPaired(View v){
@@ -248,6 +269,7 @@ public class RightFragment extends Fragment {
     private TextView mbt_status;
     private Button mScan_button;
     private ListView btViewList;
+    private Button on_button;
 
     //shows progress menu
     private ProgressDialog progress_dialog;

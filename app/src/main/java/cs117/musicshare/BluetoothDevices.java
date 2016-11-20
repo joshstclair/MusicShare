@@ -31,6 +31,7 @@ import android.graphics.Color;
 public class BluetoothDevices extends AppCompatActivity {
     private TextView mbt_status;
     private Button mScan_button;
+    private Button on_button;
     private ListView btViewList;
 
     //shows progress menu
@@ -51,6 +52,7 @@ public class BluetoothDevices extends AppCompatActivity {
         mScan_button = (Button) findViewById(R.id.button_scan);
         mbt_status = (TextView) findViewById(R.id.btList);
         btViewList= (ListView)findViewById(R.id.bluelist);
+        on_button = (Button) findViewById(R.id.buttonOn);
 
         //get bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -68,7 +70,7 @@ public class BluetoothDevices extends AppCompatActivity {
                 //Intent enableBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 //startActivityForResult(enableBT, 1);
                 mBluetoothAdapter.enable();
-                showEnabled();
+                showOn();
             }
         });
         //set up loading dialog
@@ -91,16 +93,30 @@ public class BluetoothDevices extends AppCompatActivity {
                 mBluetoothAdapter.startDiscovery();
             }
         });
+        //turn on/off bluetooth
+        on_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mBluetoothAdapter.isEnabled()) {
+                    mBluetoothAdapter.disable();
+
+                    showOff();
+                } else {
+                    Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(intent, 1000);
+                }
+            }
+        });
         //if Bluetooth is on
         if (!mBluetoothAdapter.isEnabled()) {
-            bt_dialog.show();
-            View view = this.getWindow().getDecorView();
-            view.setBackgroundColor(0xFFFF69B4);
-            mScan_button.setEnabled(false);
+            showOn();
             showPaired();
         }
         else{
-            showEnabled();
+            showOff();
+            View view = this.getWindow().getDecorView();
+            view.setBackgroundColor(0xFFFF69B4);
+            mScan_button.setEnabled(false);
             showPaired();
         }
         IntentFilter filter = new IntentFilter();
@@ -171,23 +187,24 @@ public class BluetoothDevices extends AppCompatActivity {
     }
 
     //if bluetooth is on
-    private void showEnabled() {
+    private void showOn() {
         bt_dialog.dismiss();
         View view = this.getWindow().getDecorView();
         view.setBackgroundColor(0xFFADD8E6);
         mScan_button.setEnabled(true);
     }
-
+    //if bluetooth is off
+    private void showOff() {
+        bt_dialog.dismiss();
+        View view = this.getWindow().getDecorView();
+        view.setBackgroundColor(0xFFffb2b2);
+        mScan_button.setEnabled(true);
+    }
     //want to clear bluetooth instance when exiting
     @Override
     protected void onDestroy() {
         unregisterReceiver(mReceiver);
         super.onDestroy();
-    }
-
-    //go back to main menu
-    public void backMain(View view) {
-        finish();
     }
 
     //Pop up a message to the user
@@ -206,7 +223,7 @@ public class BluetoothDevices extends AppCompatActivity {
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                 if (state == BluetoothAdapter.STATE_ON) {
                     show_Message("Bluetooth enabled, enjoy the music!");
-                    showEnabled();
+                    showOn();
                 }
             }
             //if bluetooth starts discovering, show message for discovery and init new device list
