@@ -62,7 +62,7 @@ public class RightFragment extends Fragment {
 
         //get bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        progress_dialog = new ProgressDialog(getActivity(), android.R.style.Theme_Translucent_NoTitleBar);
+        progress_dialog = new ProgressDialog(getActivity());
         bt_dialog = new ProgressDialog(getActivity());
 
         //setup bt dialog

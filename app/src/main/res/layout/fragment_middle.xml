@@ -6,9 +6,33 @@
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
+        android:text="No connected devices."
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="M  I  D  D  L  E    --    F  R  A  G  M  E  N  T"
-        android:gravity="center_vertical|center_horizontal" />
+        android:layout_height="wrap_content"
+        android:id="@+id/music_status"
+        android:textSize="20sp"
+        android:textColor="@color/background_material_dark"
+        android:layout_marginTop="12dp"
+        android:layout_centerHorizontal="true"
+        android:visibility="visible"
+        android:gravity="center_horizontal" />
+    <ListView
+        android:id="@+id/song_list"
+        android:layout_width="fill_parent"
+        android:layout_height="431dp"
+        android:layout_weight="0.20"
+        android:layout_marginTop="67dp">
+    </ListView>
+    <Button
+        android:id="@+id/button_scan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="scan devices"
+        android:layout_marginTop="50dp"
+        android:layout_below="@+id/textView"
+        android:elevation="0dp"
+        android:enabled="false"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
 </FrameLayout>
