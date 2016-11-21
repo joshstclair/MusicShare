@@ -1,5 +1,6 @@
 package cs117.musicshare;
 
+import android.app.FragmentTransaction;
 import android.os.Bundle;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -206,7 +207,10 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
         super.onPause();
         paused=true;
     }
-
+    public void backFresh(View view) {
+        finish();
+        startActivity(getIntent());
+    }
     @Override
     protected void onResume(){
         super.onResume();

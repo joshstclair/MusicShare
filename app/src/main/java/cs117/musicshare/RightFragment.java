@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.Gravity;
@@ -43,21 +44,21 @@ public class RightFragment extends Fragment {
         // Required empty public constructor
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_right,
+        view = inflater.inflate(R.layout.fragment_right,
                 container, false);
-
 
         //FrameLayout f2 = (FrameLayout) inflater.inflate(R.layout.fragment_left, container, false);
         //link button to variable
         mScan_button = (Button) view.findViewById(R.id.button_scan);
         mbt_status = (TextView) view.findViewById(R.id.btList);
-        btViewList= (ListView) view.findViewById(R.id.bluelist);
+        btViewList = (ListView) view.findViewById(R.id.bluelist);
         on_button = (Button) view.findViewById(R.id.buttonOn);
+        refresh_button = (Button) view.findViewById(R.id.refresh);
 
         //get bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -123,8 +124,7 @@ public class RightFragment extends Fragment {
         if (mBluetoothAdapter.isEnabled()) {
             showEnabled();
             showPaired(view);
-        }
-        else{
+        } else {
             showDisabled();
         }
         IntentFilter filter = new IntentFilter();
@@ -153,18 +153,23 @@ public class RightFragment extends Fragment {
         View view = getActivity().getWindow().getDecorView();
         //view.setBackgroundColor(0xFFADD8A7);//0xFFADD8E6
         mScan_button.setEnabled(true);
+        refresh_button.setEnabled(true);
         mbt_status.setVisibility(view.VISIBLE);
+        btViewList.setVisibility(view.VISIBLE);
     }
+
     //if bluetooth is off
     private void showDisabled() {
         View view = getActivity().getWindow().getDecorView();
         //view.setBackgroundColor(0xFFADD8A7);
         on_button.setText("Turn on Bluetooth");
         mScan_button.setEnabled(false);
+        refresh_button.setEnabled(false);
         mbt_status.setVisibility(view.INVISIBLE);
+        btViewList.setVisibility(view.INVISIBLE);
     }
 
-    private void showPaired(View v){
+    public void showPaired(View v) {
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
         //show no devices message
 
@@ -180,23 +185,25 @@ public class RightFragment extends Fragment {
             list.addAll(pairedDevices);
 
             pairedDeviceAdapter = new ArrayAdapter<BluetoothDevice>(getActivity(),
-                   android.R.layout.simple_list_item_1, list);
+                    android.R.layout.simple_list_item_1, list);
+            pairedDeviceAdapter.notifyDataSetChanged();
+
             btViewList.setAdapter(pairedDeviceAdapter);
 
-            btViewList.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            btViewList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 //if user clicks on paired devices
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view,
                                         int position, long id) {
                     final BluetoothDevice device =
-                            (BluetoothDevice)parent.getItemAtPosition(position);
+                            (BluetoothDevice) parent.getItemAtPosition(position);
                     final String device_name = device.getName();
                     new AlertDialog.Builder(getActivity())
                             .setTitle("Device information")
                             .setMessage("Name: " + device.getName() + "\n"
                                     + "Address: " + device.getAddress() + "\n"
                                     + "BondState: " + device.getBondState() + "\n"
-                                    + "BluetoothClass: " + device.getBluetoothClass() )
+                                    + "BluetoothClass: " + device.getBluetoothClass())
                             //Dismiss message or unpair
                             .setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
@@ -212,6 +219,7 @@ public class RightFragment extends Fragment {
                                         getActivity().finish();
                                         startActivity(getActivity().getIntent());
                                         show_Message("Unpaired device: " + device_name);
+                                        pairedDeviceAdapter.notifyDataSetChanged();
                                     } catch (Exception e) {
                                         Log.e("fail", e.getMessage());
                                     }
@@ -219,10 +227,10 @@ public class RightFragment extends Fragment {
                             })
                             .setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
-                }});
+                }
+            });
         }
     }
-
     @Override
     public void onDestroy() {
         getActivity().unregisterReceiver(mReceiver);
@@ -270,6 +278,7 @@ public class RightFragment extends Fragment {
     private Button mScan_button;
     private ListView btViewList;
     private Button on_button;
+    private Button refresh_button;
 
     //shows progress menu
     private ProgressDialog progress_dialog;
@@ -279,5 +288,8 @@ public class RightFragment extends Fragment {
     //create an instance of Bluetooth
     private BluetoothAdapter mBluetoothAdapter;
     ArrayAdapter<BluetoothDevice> pairedDeviceAdapter;
+
+    View view;
+
     //-----------------------------------------------
 }

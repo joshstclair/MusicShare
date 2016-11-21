@@ -57,7 +57,7 @@ public class DeviceList extends Activity {
         pairedDeviceAdapter = new ArrayAdapter<BluetoothDevice>(this,
                 android.R.layout.simple_list_item_1, mDeviceList);
         mListView.setAdapter(pairedDeviceAdapter);
-
+        pairedDeviceAdapter.notifyDataSetChanged();
 
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
 
@@ -78,14 +78,14 @@ public class DeviceList extends Activity {
                                             // do nothing
                                         }
                                     })
-                                    .setNegativeButton("pair/unpair", new DialogInterface.OnClickListener() {
+                                    .setNegativeButton("pair", new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int which) {
                                             if(device.getBondState() != BluetoothDevice.BOND_BONDED){
                                                 try {
                                                     Method m = device.getClass()
                                                             .getMethod("createBond", (Class[]) null);
                                                     m.invoke(device, (Object[]) null);
-                                                    mListView.getChildAt(position).setBackgroundColor(0x7778AB46);
+                                                    //mListView.getChildAt(position).setBackgroundColor(0x7778AB46);
                                                     show_Message("Paired device: " + device_name);
                                                 } catch (Exception e) {
                                                     Log.e("fail", e.getMessage());
@@ -95,7 +95,7 @@ public class DeviceList extends Activity {
                                                 try {
                                                     Method method = device.getClass().getMethod("removeBond", (Class[]) null);
                                                     method.invoke(device, (Object[]) null);
-                                                    mListView.getChildAt(position).setBackgroundColor(0);
+                                                    //mListView.getChildAt(position).setBackgroundColor(0);
                                                     show_Message("Unpaired device: " + device_name);
 
                                                 } catch (Exception e) {
