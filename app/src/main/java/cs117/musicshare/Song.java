@@ -1,10 +1,22 @@
 package cs117.musicshare;
 
+import android.util.Log;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 /**
  * Created by joshua on 10/31/16.
  */
 
-public class Song {
+public class Song implements java.io.Serializable {
+
+    public Song() {
+        id=0;
+        title="";
+        artist="";
+    }
 
     public Song(long songID, String songTitle, String songArtist) {
         id=songID;
