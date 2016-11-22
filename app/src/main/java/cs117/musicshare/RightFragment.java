@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -29,10 +30,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Set;
-
+import java.util.UUID;
+import android.os.Handler;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -56,12 +61,19 @@ public class RightFragment extends Fragment {
         //link button to variable
         mScan_button = (Button) view.findViewById(R.id.button_scan);
         mbt_status = (TextView) view.findViewById(R.id.btList);
+        myLabel = (TextView) view.findViewById(R.id.label);
+
         btViewList = (ListView) view.findViewById(R.id.bluelist);
         on_button = (Button) view.findViewById(R.id.buttonOn);
         refresh_button = (Button) view.findViewById(R.id.refresh);
+        Button sendButton = (Button) view.findViewById(R.id.button_send);
+        Button connectButton = (Button) view.findViewById(R.id.button_open);
 
         //get bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if(mBluetoothAdapter == null) {
+            Toast.makeText(getActivity(), "No Bluetooth adapter available",Toast.LENGTH_SHORT).show();
+        }
         progress_dialog = new ProgressDialog(getActivity());
         bt_dialog = new ProgressDialog(getActivity());
 
@@ -104,6 +116,7 @@ public class RightFragment extends Fragment {
                 //Toast.makeText(getActivity(), "Helloo",Toast.LENGTH_SHORT).show();
                 mBluetoothAdapter.startDiscovery();
 
+
             }
         });
 
@@ -120,6 +133,7 @@ public class RightFragment extends Fragment {
                 }
             }
         });
+
         //if Bluetooth is on
         if (mBluetoothAdapter.isEnabled()) {
             showEnabled();
@@ -136,6 +150,29 @@ public class RightFragment extends Fragment {
 
         getActivity().registerReceiver(mReceiver, filter);
 
+        // Bryan Edits
+        //------------------------------------------------------
+        connectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    openBT();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+        });
+        sendButton.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    sendData();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
         //return f2;
         return view;
         //return inflater.inflate(R.layout.fragment_right, container, false);
@@ -195,15 +232,15 @@ public class RightFragment extends Fragment {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view,
                                         int position, long id) {
-                    final BluetoothDevice device =
+                    mmDevice =
                             (BluetoothDevice) parent.getItemAtPosition(position);
-                    final String device_name = device.getName();
+                    final String device_name = mmDevice.getName();
                     new AlertDialog.Builder(getActivity())
                             .setTitle("Device information")
-                            .setMessage("Name: " + device.getName() + "\n"
-                                    + "Address: " + device.getAddress() + "\n"
-                                    + "BondState: " + device.getBondState() + "\n"
-                                    + "BluetoothClass: " + device.getBluetoothClass())
+                            .setMessage("Name: " + mmDevice.getName() + "\n"
+                                    + "Address: " + mmDevice.getAddress() + "\n"
+                                    + "BondState: " + mmDevice.getBondState() + "\n"
+                                    + "BluetoothClass: " + mmDevice.getBluetoothClass())
                             //Dismiss message or unpair
                             .setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
@@ -213,9 +250,9 @@ public class RightFragment extends Fragment {
                             .setPositiveButton("unpair", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                     try {
-                                        Method m = device.getClass()
+                                        Method m = mmDevice.getClass()
                                                 .getMethod("removeBond", (Class[]) null);
-                                        m.invoke(device, (Object[]) null);
+                                        m.invoke(mmDevice, (Object[]) null);
                                         getActivity().finish();
                                         startActivity(getActivity().getIntent());
                                         show_Message("Unpaired device: " + device_name);
@@ -272,6 +309,87 @@ public class RightFragment extends Fragment {
             }
         }
     };
+
+    void openBT() throws IOException {
+        try {
+            //Standard SerialPortService ID
+            UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+            mmSocket.connect();
+            mmOutputStream = mmSocket.getOutputStream();
+            mmInputStream = mmSocket.getInputStream();
+
+            beginListenForData();
+            Toast.makeText(getActivity(), "Bluetooth Opened!", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    void beginListenForData() {
+        try {
+            final Handler handler = new Handler();
+            final byte delimiter = 10;
+            stopWorker = false;
+            readBufferPosition = 0;
+            readBuffer = new byte[1024];
+
+            workerThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (!Thread.currentThread().isInterrupted() && !stopWorker) {
+                        try {
+                            int bytesAvailable = mmInputStream.available();
+
+                            if (bytesAvailable > 0) {
+                                byte[] packetBytes = new byte[bytesAvailable];
+                                mmInputStream.read(packetBytes);
+
+                                for (int i = 0; i < bytesAvailable; i++) {
+                                    byte b = packetBytes[i];
+                                    if (b == delimiter) {
+                                        byte[] encodedBytes = new byte[readBufferPosition];
+                                        System.arraycopy(readBuffer,0,encodedBytes,0,encodedBytes.length);
+
+                                        //US ASCII code
+                                        final String data = new String(encodedBytes, "US-ASCII");
+                                        readBufferPosition = 0;
+
+                                        handler.post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(getActivity(),"data successfully sent", Toast.LENGTH_SHORT).show();
+                                                myLabel.setText(data);
+                                            }
+                                        });
+                                    } else {
+                                        readBuffer[readBufferPosition++] = b;
+                                    }
+                                }
+                            }
+
+                        } catch (IOException ex) {
+                            stopWorker = true;
+                        }
+                    }
+                }
+            });
+            workerThread.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    void sendData() throws IOException {
+        try {
+
+            String msg = "test\n";
+            mmOutputStream.write(msg.getBytes());
+            myLabel.setText("Data sent.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     //Bluetooth Variables
     //-----------------------------------------------
     private TextView mbt_status;
@@ -288,7 +406,17 @@ public class RightFragment extends Fragment {
     //create an instance of Bluetooth
     private BluetoothAdapter mBluetoothAdapter;
     ArrayAdapter<BluetoothDevice> pairedDeviceAdapter;
+    //Bryan edits
+    public BluetoothDevice mmDevice;
+    public BluetoothSocket mmSocket;
+    OutputStream mmOutputStream;
+    InputStream mmInputStream;
+    Thread workerThread;
+    TextView myLabel;
 
+    byte[] readBuffer;
+    int readBufferPosition;
+    volatile boolean stopWorker;
     View view;
 
     //-----------------------------------------------
