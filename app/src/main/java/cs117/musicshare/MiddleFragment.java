@@ -55,10 +55,29 @@ public class MiddleFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_middle,
                 container, false);
 
+        music_stat = (TextView) view.findViewById(R.id.music_status);
         bt = (Button) view.findViewById(R.id.button_scan);
-        bt.setEnabled(true);
 
-        return inflater.inflate(R.layout.fragment_middle, container, false);
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        if (pairedDevices == null || pairedDevices.size() == 0) {
+            music_stat.setText("Yo, No connected devices.");
+            music_stat.setVisibility(View.VISIBLE);
+        }
+        else {
+            music_stat.setText("Hey, No connected devices.");
+            music_stat.setVisibility(View.INVISIBLE);
+            BluetoothDevice bt_device = pairedDevices.iterator().next();
+
+            AcceptThread ct = new AcceptThread();
+            ct.start();
+
+            //ConnectThread ct1 = new ConnectThread(bt_device);
+            //ct1.run();
+            bt.setEnabled(true);
+        }
+
+        return view;
 
     }
 
@@ -79,10 +98,11 @@ public class MiddleFragment extends Fragment {
             BluetoothDevice bt_device = pairedDevices.iterator().next();
 
             AcceptThread ct = new AcceptThread();
-            ct.start();
+            ct.run();
 
             ConnectThread ct1 = new ConnectThread(bt_device);
-            ct1.start();
+            ct1.run();
+            bt.setEnabled(true);
         }
     }
 
