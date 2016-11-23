@@ -159,12 +159,12 @@ public class MiddleFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     showMessage("Receiving stuff");
-                    /*try {
+                    try {
                         showMessage("Receiving stuff");
                         myChannel.receiveData();
                     } catch (IOException e) {
                         e.printStackTrace();
-                    }*/
+                    }
                 }
             });
             //bt_get
@@ -198,9 +198,12 @@ public class MiddleFragment extends Fragment {
         progress_client.dismiss();
         connected = true;
         myChannel = new ThreadConnected(mSocket);
+        //byte[] b = "testing".getBytes();
+        //myChannel.write(b);
+        //myChannel.receiveData();
 
-        SystemClock.sleep(15000);
-        myChannel.start();
+        //SystemClock.sleep(15000);
+        //myChannel.start();
         mHandler.obtainMessage(3)
                 .sendToTarget();
         //byte[] b = "testing".getBytes();
@@ -318,6 +321,11 @@ public class MiddleFragment extends Fragment {
                 workerThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        getActivity().runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(getActivity().getApplicationContext(), "***OMG!***",Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         while (!Thread.currentThread().isInterrupted()) {
                             try {
                                 int bytesAvailable = connectedInputStream.available();
@@ -339,7 +347,7 @@ public class MiddleFragment extends Fragment {
                                             handler.post(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    Toast.makeText(getActivity(),"data successfully sent", Toast.LENGTH_SHORT).show();
+                                                    Toast.makeText(getActivity(),"data successfully recieved", Toast.LENGTH_SHORT).show();
                                                     textStatus.setText(data);
                                                 }
                                             });
