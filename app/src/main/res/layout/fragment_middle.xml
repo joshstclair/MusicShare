@@ -16,23 +16,72 @@
         android:layout_centerHorizontal="true"
         android:visibility="visible"
         android:gravity="center_horizontal" />
-    <ListView
-        android:id="@+id/song_list"
-        android:layout_width="fill_parent"
-        android:layout_height="431dp"
-        android:layout_weight="0.20"
-        android:layout_marginTop="67dp">
-    </ListView>
+
     <Button
-        android:id="@+id/button_scan"
-        android:layout_width="match_parent"
+        android:id="@+id/button_client"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="scan devices"
-        android:layout_marginTop="50dp"
+        android:text="Client"
+        android:layout_marginTop="35dp"
         android:layout_below="@+id/textView"
         android:elevation="0dp"
         android:enabled="false"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
+
+    <Button
+        android:id="@+id/button_server"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Server"
+        android:layout_marginTop="35dp"
+        android:layout_marginLeft="270dp"
+        android:layout_below="@+id/textView"
+        android:elevation="0dp"
+        android:enabled="false"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+    <Button
+        android:id="@+id/button_send"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send"
+        android:layout_marginTop="450dp"
+        android:layout_marginLeft="230dp"
+        android:layout_below="@+id/textView"
+        android:elevation="0dp"
+        android:enabled="false"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+    <Button
+        android:id="@+id/button_receive"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Receive"
+        android:layout_marginTop="450dp"
+        android:layout_marginLeft="100dp"
+        android:layout_below="@+id/textView"
+        android:elevation="0dp"
+        android:enabled="false"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+    <ListView
+        android:id="@+id/song_list"
+        android:layout_width="fill_parent"
+        android:layout_height="437dp"
+        android:layout_weight="0.20"
+        android:layout_marginTop="80dp">
+    </ListView>
+    <TextView
+        android:text=""
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/status"
+        android:textSize="20sp"
+        android:textColor="@color/background_material_dark"
+        android:layout_marginTop="122dp"
+        android:layout_centerHorizontal="true"
+        android:visibility="visible"
+        android:gravity="center_horizontal" />
 
 </FrameLayout>
