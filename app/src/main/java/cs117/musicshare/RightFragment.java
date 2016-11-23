@@ -61,13 +61,10 @@ public class RightFragment extends Fragment {
         //link button to variable
         mScan_button = (Button) view.findViewById(R.id.button_scan);
         mbt_status = (TextView) view.findViewById(R.id.btList);
-        myLabel = (TextView) view.findViewById(R.id.label);
 
         btViewList = (ListView) view.findViewById(R.id.bluelist);
         on_button = (Button) view.findViewById(R.id.buttonOn);
         refresh_button = (Button) view.findViewById(R.id.refresh);
-        Button sendButton = (Button) view.findViewById(R.id.button_send);
-        Button connectButton = (Button) view.findViewById(R.id.button_open);
 
         //get bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -150,30 +147,6 @@ public class RightFragment extends Fragment {
 
         getActivity().registerReceiver(mReceiver, filter);
 
-        // Bryan Edits
-        //------------------------------------------------------
-        connectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    openBT();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-        });
-        sendButton.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    sendData();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        //return f2;
         return view;
         //return inflater.inflate(R.layout.fragment_right, container, false);
     }
@@ -310,86 +283,6 @@ public class RightFragment extends Fragment {
         }
     };
 
-    void openBT() throws IOException {
-        try {
-            //Standard SerialPortService ID
-            UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-            mmSocket.connect();
-            mmOutputStream = mmSocket.getOutputStream();
-            mmInputStream = mmSocket.getInputStream();
-
-            beginListenForData();
-            Toast.makeText(getActivity(), "Bluetooth Opened!", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    void beginListenForData() {
-        try {
-            final Handler handler = new Handler();
-            final byte delimiter = 10;
-            stopWorker = false;
-            readBufferPosition = 0;
-            readBuffer = new byte[1024];
-
-            workerThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (!Thread.currentThread().isInterrupted() && !stopWorker) {
-                        try {
-                            int bytesAvailable = mmInputStream.available();
-
-                            if (bytesAvailable > 0) {
-                                byte[] packetBytes = new byte[bytesAvailable];
-                                mmInputStream.read(packetBytes);
-
-                                for (int i = 0; i < bytesAvailable; i++) {
-                                    byte b = packetBytes[i];
-                                    if (b == delimiter) {
-                                        byte[] encodedBytes = new byte[readBufferPosition];
-                                        System.arraycopy(readBuffer,0,encodedBytes,0,encodedBytes.length);
-
-                                        //US ASCII code
-                                        final String data = new String(encodedBytes, "US-ASCII");
-                                        readBufferPosition = 0;
-
-                                        handler.post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Toast.makeText(getActivity(),"data successfully sent", Toast.LENGTH_SHORT).show();
-                                                myLabel.setText(data);
-                                            }
-                                        });
-                                    } else {
-                                        readBuffer[readBufferPosition++] = b;
-                                    }
-                                }
-                            }
-
-                        } catch (IOException ex) {
-                            stopWorker = true;
-                        }
-                    }
-                }
-            });
-            workerThread.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    void sendData() throws IOException {
-        try {
-
-            String msg = "test\n";
-            mmOutputStream.write(msg.getBytes());
-            myLabel.setText("Data sent.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
     //Bluetooth Variables
     //-----------------------------------------------
     private TextView mbt_status;
@@ -397,7 +290,7 @@ public class RightFragment extends Fragment {
     private ListView btViewList;
     private Button on_button;
     private Button refresh_button;
-
+    View view;
     //shows progress menu
     private ProgressDialog progress_dialog;
     private ProgressDialog bt_dialog;
@@ -406,18 +299,10 @@ public class RightFragment extends Fragment {
     //create an instance of Bluetooth
     private BluetoothAdapter mBluetoothAdapter;
     ArrayAdapter<BluetoothDevice> pairedDeviceAdapter;
-    //Bryan edits
+
     public BluetoothDevice mmDevice;
     public BluetoothSocket mmSocket;
-    OutputStream mmOutputStream;
-    InputStream mmInputStream;
-    Thread workerThread;
-    TextView myLabel;
 
-    byte[] readBuffer;
-    int readBufferPosition;
-    volatile boolean stopWorker;
-    View view;
 
     //-----------------------------------------------
 }

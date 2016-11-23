@@ -198,12 +198,12 @@ public class MiddleFragment extends Fragment {
         progress_client.dismiss();
         connected = true;
         myChannel = new ThreadConnected(mSocket);
-        //byte[] b = "testing".getBytes();
-        //myChannel.write(b);
+        byte[] b = "testing".getBytes();
+        myChannel.write(b);
         //myChannel.receiveData();
 
-        //SystemClock.sleep(15000);
-        //myChannel.start();
+        SystemClock.sleep(15000);
+        myChannel.start();
         mHandler.obtainMessage(3)
                 .sendToTarget();
         //byte[] b = "testing".getBytes();
