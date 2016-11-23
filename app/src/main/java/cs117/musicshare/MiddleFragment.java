@@ -235,19 +235,6 @@ public class MiddleFragment extends Fragment {
                 case 3:
                     bt_send.setEnabled(true);
                     bt_receive.setEnabled(true);
-                    //start sending info
-                /*case 4:
-                    try {
-                        myChannel.receiveData();
-                        showMessage("Receiving stuff");
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                        SystemClock.sleep(3000);
-                        showMessage("sending stuff:" + myChannel);
-                        byte[] b = ("Connected to: " + deviceToConnect.getName()).getBytes();
-                        myChannel.write(b);
-                */
 
             }
         }
@@ -393,7 +380,7 @@ public class MiddleFragment extends Fragment {
         }
 
     }
-    private class ConnectedThread extends Thread {
+   /* private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
@@ -471,7 +458,7 @@ public class MiddleFragment extends Fragment {
                 Log.e(TAG, "close() of connect socket failed", e);
             }
         }
-    }
+    }*/
 
     //Server side
     private class AcceptThread extends Thread {
