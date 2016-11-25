@@ -1,19 +1,47 @@
 package cs117.musicshare;
 
 
-import android.app.ActionBar;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.UUID;
+import android.os.Handler;
+
+/**
+ * A simple {@link Fragment} subclass.
+ */
 public class RightFragment extends Fragment {
 
 
@@ -29,21 +57,6 @@ public class RightFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_right,
                 container, false);
 
-        //set up loading dialog
-        Window window = progress_dialog.getWindow();
-        window.setLayout(ActionBar.LayoutParams.WRAP_CONTENT, ActionBar.LayoutParams.WRAP_CONTENT);
-        window.setGravity(Gravity.CENTER);
-        progress_dialog.setMessage("Scanning for devices...");
-        progress_dialog.setCancelable(false);
-        progress_dialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Stop", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                //action here
-            }
-        });
-
-
         return view;
         //return inflater.inflate(R.layout.fragment_right, container, false);
     }
@@ -53,13 +66,12 @@ public class RightFragment extends Fragment {
         Toast.makeText(getActivity().getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
+
     @Override
     public void onDestroy() {
         super.onDestroy();
     }
 
     View view;
-    //shows progress menu
-    private ProgressDialog progress_dialog;
 
 }
