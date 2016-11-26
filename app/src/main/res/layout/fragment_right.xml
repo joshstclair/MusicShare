@@ -12,6 +12,13 @@
     tools:context="cs117.musicshare.RightFragment"
     app:backgroundTint="@color/colorPrimary">
 
+    <TextView
+        android:id="@+id/Wifi2DirectLabel"
+        android:layout_marginTop="10dp"
+        android:text="Wifi2DirectLabel"
+        android:layout_width="253dp"
+        android:layout_height="54dp" />
+
     <Button
         android:id="@+id/refresh"
         android:layout_width="wrap_content"
@@ -22,6 +29,11 @@
         android:layout_marginBottom="10dp"
         android:onClick="backFresh"/>
 
+    <ListView
+        android:id="@+id/PeersList"
+        android:layout_marginTop="60dp"
+        android:layout_width="fill_parent"
+        android:layout_height="380dp"></ListView>
 
 
 </FrameLayout>
