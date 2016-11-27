@@ -15,6 +15,7 @@ import android.graphics.Color;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pGroup;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -39,6 +40,7 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
 import android.widget.AdapterView.OnItemClickListener;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,7 +50,7 @@ import static android.os.Looper.getMainLooper;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class RightFragment extends Fragment implements WifiP2pManager.PeerListListener {
+public class RightFragment extends Fragment implements WifiP2pManager.ConnectionInfoListener, WifiP2pManager.PeerListListener {
 
 
     public RightFragment() {
@@ -80,13 +82,11 @@ public class RightFragment extends Fragment implements WifiP2pManager.PeerListLi
         bSearch.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
                 peersConnect.clear();
-                list.setVisibility(ListView.INVISIBLE);
+                list.setVisibility(ListView.VISIBLE);
                 peersConnect.clear();
                 peers.clear();
                 peersName.clear();
                 discoverDevices();
-                upDateConnect();
-                showConnected();
             }
         });
 /*
@@ -152,26 +152,70 @@ public class RightFragment extends Fragment implements WifiP2pManager.PeerListLi
             return;
         }
     }
-    public void upDateConnect() {
-        peers_Connect_list.clear();
 
-        if (mManager != null && mChannel != null) {
-            mManager.requestGroupInfo(mChannel, new WifiP2pManager.GroupInfoListener() {
-                public void onGroupInfoAvailable(WifiP2pGroup group) {
-                    if (group != null && mManager != null && mChannel != null) {
-                        peers_Connect_list.add(group.getOwner().deviceName);
-                    }
+    public void onConnectionInfoAvailable(final WifiP2pInfo info) {
+        peers_Connect_list.clear();
+        String groupOwnerAddress = info.groupOwnerAddress.getHostAddress();
+
+        // After the group negotiation, we can determine the group owner.
+        if (info.groupFormed && info.isGroupOwner) {
+            peers_Connect_list.add(groupOwnerAddress + "-- Owner");
+            listC.setAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, peers_Connect_list));
+            listC.setVisibility(ListView.VISIBLE);
+
+            listC.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                    new AlertDialog.Builder(getActivity())
+                            .setTitle("Connection managment")
+                            .setMessage("Device is the owner, device can disconnect connection.")
+                            .setNegativeButton("Okay", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                return;
+                                }
+                            })
+                            .setPositiveButton("Disconnect", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    disconnectDevices();
+                                }})
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .show();;
                 }
             });
+
+            // Do whatever tasks are specific to the group owner.
+            // One common case is creating a server thread and accepting
+            // incoming connections.
+        } else if (info.groupFormed) {
+            peers_Connect_list.add(groupOwnerAddress + "-- Not Owner");
+            listC.setAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, peers_Connect_list));
+            listC.setVisibility(ListView.VISIBLE);
+
+            listC.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                    new AlertDialog.Builder(getActivity())
+                            .setTitle("Connection managment")
+                            .setMessage("Device is not the owner, cannot disconnect")
+                            .setNegativeButton("Okay", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    return;
+                                }
+                            })
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .show();;
+                }
+            });
+            // The other device acts as the client. In this case,
+            // you'll want to create a client thread that connects to the group
+            // owner.
         }
     }
-    public void showConnected(){
-        show_Message("Owner outside: " + peers_Connect_list.size());
-            if(peers_Connect_list.size() > 0) {
-                show_Message("Showing connected********");
-                listC.setAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, peers_Connect_list));
-                listC.setVisibility(ListView.VISIBLE);
-        }
+    public void updateList(){
+        listC.setAdapter(null);
+        //listC.setVisibility(ListView.INVISIBLE);
     }
     private void discoverDevices() {
         mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
@@ -224,12 +268,12 @@ public class RightFragment extends Fragment implements WifiP2pManager.PeerListLi
                         mManager.removeGroup(mChannel, new ActionListener() {
                             @Override
                             public void onSuccess() {
-
+                                show_Message("Connection disconnected succesfully!");
                             }
 
                             @Override
                             public void onFailure(int reason) {
-
+                                show_Message("Connection disconnected failed, try again!");
                             }
                         });
                     }
@@ -292,7 +336,7 @@ public class RightFragment extends Fragment implements WifiP2pManager.PeerListLi
     private List<WifiP2pDevice> peersConnected = new ArrayList<WifiP2pDevice>();
     private ArrayList<String> peersName = new ArrayList<String>();
 
-    ArrayList<String> peers_Connect_list = new ArrayList<String>();
+    private ArrayList<String> peers_Connect_list = new ArrayList<String>();
 
     private ListView list;
     private ListView listC;

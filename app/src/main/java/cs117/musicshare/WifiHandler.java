@@ -53,8 +53,19 @@ public class WifiHandler extends BroadcastReceiver{
                 if (mManager == null) {
                     return;
                 }
-                mActivity.upDateConnect();
-                mActivity.showConnected();
+                NetworkInfo networkInfo = (NetworkInfo) intent
+                        .getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
+
+                if (networkInfo.isConnected()) {
+                    // We are connected with the other device, request connection
+                    // info to find group owner IP
+
+                    mManager.requestConnectionInfo(mChannel, (WifiP2pManager.ConnectionInfoListener) mActivity);
+                }
+                //disconnected
+                else{
+                    mActivity.updateList();
+                }
             } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
                 // Respond to this device's wifi state changing
                 if (mManager == null) {
