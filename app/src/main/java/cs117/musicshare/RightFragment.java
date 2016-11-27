@@ -12,13 +12,22 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.net.wifi.WpsInfo;
+import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckedTextView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -28,6 +37,10 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
+import android.widget.AdapterView.OnItemClickListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.os.Looper.getMainLooper;
 
@@ -35,7 +48,7 @@ import static android.os.Looper.getMainLooper;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class RightFragment extends Fragment {
+public class RightFragment extends Fragment implements WifiP2pManager.PeerListListener {
 
 
     public RightFragment() {
@@ -50,13 +63,10 @@ public class RightFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_right,
                 container, false);
 
-        //setup peers list
-        peerList = (ListView) view.findViewById(R.id.PeersList);
-
         //-------wifi direct init----
         mManager = (WifiP2pManager) getActivity().getSystemService(Context.WIFI_P2P_SERVICE);
         mChannel = mManager.initialize(getActivity(), getMainLooper(), null);
-        mReceiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
+        mReceiver = new WifiHandler(mManager, mChannel, this);
 
         //init wifi direct intent-filters
         mIntentFilter = new IntentFilter();
@@ -65,6 +75,105 @@ public class RightFragment extends Fragment {
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
+        //Search for near by peers
+        bSearch = (Button) view.findViewById(R.id.searcher);
+        bSearch.setOnClickListener(new View.OnClickListener() {
+            public void onClick (View v) {
+                peersConnect.clear();
+                list.setVisibility(ListView.INVISIBLE);
+                peersConnect.clear();
+                peers.clear();
+                peersName.clear();
+                discoverDevices();
+                upDateConnect();
+                showConnected();
+            }
+        });
+/*
+        bDisconnect = (Button) view.findViewById(R.id.disconnecter);
+        bDisconnect.setOnClickListener(new View.OnClickListener() {
+            public void onClick (View v) {
+                disconnectDevices();
+                peersConnect.clear();
+                bDisconnect.setVisibility(View.INVISIBLE);
+            }
+        });*/
+
+        list = (ListView) view.findViewById(R.id.connectList);
+        list.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+        list.setTextFilterEnabled(true);
+
+        listC =(ListView) view.findViewById(R.id.connectedList);
+        listC.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+        listC.setTextFilterEnabled(true);
+
+
+
+        return view;
+        //return inflater.inflate(R.layout.fragment_right, container, false);
+    }
+
+    //connect disconnect ---------------------------
+
+    public void onPeersAvailable(WifiP2pDeviceList peerList) {
+        // Out with the old, in with the new.
+        peers.clear();
+        peers.addAll(peerList.getDeviceList());
+        getDeviceName();
+        list.setAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, peersName));
+        list.setVisibility(ListView.VISIBLE);
+
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //WifiP2pDevice device = (WifiP2pDevice) parent.getItemAtPosition(position);
+                final WifiP2pDevice device = (WifiP2pDevice) peers.get(position);
+                //show_Message("Connecting :" + device);
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Device information")
+                        .setMessage("Connecting..." + device)
+                        .setNegativeButton("Connect", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                peersConnect.add(device);
+                                peersConnected.add(device);
+                                connectDevices();
+                            }
+                        })
+                        .setPositiveButton("cancel", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                return;
+                            }})
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();;
+            }
+        });
+
+        if (peers.size() == 0) {
+            return;
+        }
+    }
+    public void upDateConnect() {
+        peers_Connect_list.clear();
+
+        if (mManager != null && mChannel != null) {
+            mManager.requestGroupInfo(mChannel, new WifiP2pManager.GroupInfoListener() {
+                public void onGroupInfoAvailable(WifiP2pGroup group) {
+                    if (group != null && mManager != null && mChannel != null) {
+                        peers_Connect_list.add(group.getOwner().deviceName);
+                    }
+                }
+            });
+        }
+    }
+    public void showConnected(){
+        show_Message("Owner outside: " + peers_Connect_list.size());
+            if(peers_Connect_list.size() > 0) {
+                show_Message("Showing connected********");
+                listC.setAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, peers_Connect_list));
+                listC.setVisibility(ListView.VISIBLE);
+        }
+    }
+    private void discoverDevices() {
         mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
@@ -77,14 +186,71 @@ public class RightFragment extends Fragment {
                         Toast.LENGTH_SHORT).show();
             }
         });
-        mManager.onPeersAvailable(myPeerListListener);
-        //Toast.makeText(getActivity(), "Peer list: " + myPeerListListener,
-                //Toast.LENGTH_SHORT).show();
 
-
-        return view;
-        //return inflater.inflate(R.layout.fragment_right, container, false);
     }
+
+    private void connectDevices() {
+        for(int i = 0; i < peersConnect.size(); i++) {
+
+            // Picking the first device found on the network.
+            WifiP2pDevice device = peersConnect.get(i);
+
+            WifiP2pConfig config = new WifiP2pConfig();
+            config.deviceAddress = device.deviceAddress;
+            config.wps.setup = WpsInfo.PBC;
+
+            mManager.connect(mChannel, config, new ActionListener() {
+
+                @Override
+                public void onSuccess() {
+                    // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
+                    Toast.makeText(getActivity(), "Connection requested...", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                    Toast.makeText(getActivity(), "Connect failed. Retry.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    public void disconnectDevices() {
+        if (mManager != null && mChannel != null) {
+            mManager.requestGroupInfo(mChannel, new WifiP2pManager.GroupInfoListener() {
+
+                public void onGroupInfoAvailable(WifiP2pGroup group) {
+                    if (group != null && mManager != null && mChannel != null && group.isGroupOwner()) {
+                        mManager.removeGroup(mChannel, new ActionListener() {
+                            @Override
+                            public void onSuccess() {
+
+                            }
+
+                            @Override
+                            public void onFailure(int reason) {
+
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+
+    private void getDeviceName() {
+        int i = 0;
+        peersName.clear();
+        while(i < peers.size()) {
+            peersName.add(peers.get(i).deviceName);
+            i++;
+        }
+    }
+
+
+    //---------------------------------------------
+
 
     /* register the broadcast receiver with the intent values to be matched */
     @Override
@@ -100,7 +266,7 @@ public class RightFragment extends Fragment {
     }
 
     //Pop up a message to the user
-    private void show_Message(String message) {
+    public void show_Message(String message) {
         Toast.makeText(getActivity().getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
@@ -108,51 +274,6 @@ public class RightFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-    }
-
-    //event handler for wifi direct
-    public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
-
-        private WifiP2pManager mManager;
-        private WifiP2pManager.Channel mChannel;
-        private RightFragment mActivity;
-
-        public WiFiDirectBroadcastReceiver(WifiP2pManager manager, WifiP2pManager.Channel channel,
-                                           RightFragment activity) {
-            super();
-            this.mManager = manager;
-            this.mChannel = channel;
-            this.mActivity = activity;
-        }
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
-                // Check to see if Wi-Fi is enabled and notify appropriate activity
-                int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
-                if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-                    //wifi p2p is enabled
-                    show_Message("Wifi p2p is enabled");
-                } else {
-                    // Wi-Fi P2P is not enabled
-                    show_Message("Wifi p2p is not enabled!");
-                }
-            } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-                // Call WifiP2pManager.requestPeers() to get a list of current peers
-                // request available peers from the wifi p2p manager. This is an
-                // asynchronous call and the calling activity is notified with a
-                // callback on PeerListListener.onPeersAvailable()
-                if (mManager != null) {
-                    mManager.requestPeers(mChannel, myPeerListListener);
-                }
-            } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
-                // Respond to new connection or disconnections
-            } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
-                // Respond to this device's wifi state changing
-            }
-        }
     }
 
     View view;
@@ -164,5 +285,17 @@ public class RightFragment extends Fragment {
     WifiP2pManager.Channel mChannel;
     BroadcastReceiver mReceiver;
 
-    ListView peerList;
+    //Connecting-disconnecting
+    private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+    //connected peers
+    private List<WifiP2pDevice> peersConnect = new ArrayList<WifiP2pDevice>();
+    private List<WifiP2pDevice> peersConnected = new ArrayList<WifiP2pDevice>();
+    private ArrayList<String> peersName = new ArrayList<String>();
+
+    ArrayList<String> peers_Connect_list = new ArrayList<String>();
+
+    private ListView list;
+    private ListView listC;
+    private Button bSearch;
+
 }

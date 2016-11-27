@@ -1,4 +1,4 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
@@ -14,26 +14,61 @@
 
     <TextView
         android:id="@+id/Wifi2DirectLabel"
-        android:layout_marginTop="10dp"
-        android:text="Wifi2DirectLabel"
+        android:layout_marginTop="80dp"
+        android:text="Available Devices"
         android:layout_width="253dp"
         android:layout_height="54dp" />
 
-    <Button
-        android:id="@+id/refresh"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Refresh"
-        android:enabled="false"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="10dp"
-        android:onClick="backFresh"/>
+        android:id="@+id/linearlayout1" >
+        <Button
+            android:id="@+id/searcher"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Discover Devices" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linearlayout1" >
+
+    </LinearLayout>
 
     <ListView
-        android:id="@+id/PeersList"
-        android:layout_marginTop="60dp"
-        android:layout_width="fill_parent"
-        android:layout_height="380dp"></ListView>
+        android:id="@+id/connectedList"
+        android:layout_width="87dp"
+        android:layout_height="138dp"
+        android:visibility="invisible"
+        android:background="#0f0"
+        android:layout_marginBottom="80dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true">
+    </ListView>
+    <TextView
+        android:id="@+id/Wifi2DirectLabel2"
+        android:layout_marginTop="250dp"
+        android:text="Connections"
+        android:layout_width="253dp"
+        android:layout_height="24dp" />
 
+    <ListView
+        android:id="@+id/connectList"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:visibility="invisible"
+        android:background="#f00"
+        android:layout_marginTop="37dp"
+        android:layout_alignTop="@+id/Wifi2DirectLabel"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+    </ListView>
 
-</FrameLayout>
+</RelativeLayout>
+
