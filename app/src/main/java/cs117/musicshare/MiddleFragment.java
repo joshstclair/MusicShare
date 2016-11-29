@@ -233,9 +233,11 @@ public class MiddleFragment extends Fragment {
                 //Write to device
                         case 1:
                             transferData();
+                            break;
                         case 2:
                             String s1 = (String) msg.obj;
                             addEntry(s1 );
+                            break;
                         }
             }
         };
