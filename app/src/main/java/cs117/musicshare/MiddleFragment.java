@@ -7,8 +7,11 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.ParcelUuid;
@@ -22,6 +25,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -30,17 +34,25 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import android.os.*;
 import android.widget.Toast;
 
+import static android.R.id.message;
 import static android.R.style.Theme_DeviceDefault_Dialog;
 import static android.R.style.Theme_Translucent;
 import static android.R.style.Theme_Translucent_NoTitleBar;
@@ -68,6 +80,15 @@ public class MiddleFragment extends Fragment {
 
     ProgressDialog loading;
     ThreadConnected myChannel;
+
+    List<Song> MysongList;
+    List<Song> ConnectedList;
+
+    //----for testing---------
+    ArrayList<String> listItems=new ArrayList<String>();
+    ArrayAdapter<String> adpt;
+    //testing--------
+
     public MiddleFragment() {
         // Required empty public constructor
     }
@@ -81,6 +102,10 @@ public class MiddleFragment extends Fragment {
         share = (Button) view.findViewById(R.id.share);
         send = (Button) view.findViewById(R.id.send);
         songs = (ListView) view.findViewById(R.id.song_list);
+
+        //------song list----------
+        adpt = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, listItems);
+        songs.setAdapter(adpt);
 
         loading = new ProgressDialog(getActivity(), Theme_DeviceDefault_Dialog);
         //new ProgressDialog.Builder(getActivity())
@@ -115,9 +140,6 @@ public class MiddleFragment extends Fragment {
         host = ((MyApplication) getActivity().getApplication()).getHost();
 
         if(host){
-            if(communicationIP == null){
-                show_Message("blank---server");
-            }
             try {
                 serverStuff();
             } catch (IOException e) {
@@ -125,9 +147,6 @@ public class MiddleFragment extends Fragment {
             }
         }
         else{
-            if(communicationIP != null){
-                show_Message("not blank ---client:" + communicationIP);
-            }
             try {
                 clientStuff();
             } catch (IOException e) {
@@ -149,11 +168,6 @@ public class MiddleFragment extends Fragment {
         @Override
         public void run() {
             try {
-                getActivity().runOnUiThread(new Runnable() {
-                    public void run() {
-                        Toast.makeText(getActivity(), "in here waiting..." + serverRun, Toast.LENGTH_SHORT).show();
-                    }
-                });
                 serverSocket = new ServerSocket(SocketServerPORT);
                 while (serverRun) {
                     socket = serverSocket.accept();
@@ -219,10 +233,9 @@ public class MiddleFragment extends Fragment {
                 //Write to device
                         case 1:
                             transferData();
-                        /*case 2:
-                            byte[] readBuf = (byte[]) msg.obj;
-                            String readMessage = new String(readBuf, 0, msg.arg1);
-                            show_Message("Reading: " + readMessage);*/
+                        case 2:
+                            String s1 = (String) msg.obj;
+                            addEntry(s1 );
                         }
             }
         };
@@ -236,10 +249,22 @@ public class MiddleFragment extends Fragment {
         myChannel = new ThreadConnected();
         myChannel.start();
 
+        //get music stuff ===========
+        MysongList = getSongList();
+
         send.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
                 if(host == false) {
-                    byte[] b = "testing from client".getBytes();
+                    /*try {
+                        myChannel.write(serialize(MysongList));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }*/
+                    String msg = "testing from client";
+                    byte[] b = msg.getBytes();
+                    DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
+                    String date = df.format(Calendar.getInstance().getTime());
+                    addEntry("Sent at " + date + ": " + msg );
                     try {
                         myChannel.write(b);
                     } catch (IOException e) {
@@ -247,12 +272,21 @@ public class MiddleFragment extends Fragment {
                     }
                 }
                 else{
-                    byte[] b = "testing from server".getBytes();
+                    String msg = "testing from server";
+                    byte[] b = msg.getBytes();
+                    DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
+                    String date = df.format(Calendar.getInstance().getTime());
+                    addEntry("Sent at " + date + ": " + msg );
                     try {
                         myChannel.write(b);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    /*try {
+                        myChannel.write(serialize(MysongList));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }*/
                 }
             }
         });
@@ -296,32 +330,36 @@ public class MiddleFragment extends Fragment {
 
                     int bytesAvailable = connectedInputStream.available();
                     if (bytesAvailable > 0) {
+
                         byte[] packetBytes = new byte[bytesAvailable];
                         connectedInputStream.read(packetBytes);
-                        final String message = new String(packetBytes, "UTF-8");
+                        /*
+                        try {
+                            ConnectedList = (List<Song>) deserialize(packetBytes);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }*/
+                        final String msg = new String(packetBytes, "UTF-8");
                         getActivity().runOnUiThread(new Runnable() {
                             public void run() {
-                                Toast.makeText(getActivity(), "Mesage Recieved: " + message, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), "Mesage Recieved: "+ msg, Toast.LENGTH_SHORT).show();
                             }
                         });
+                        DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
+                        String date = df.format(Calendar.getInstance().getTime());
+                        //addEntry("Received at " + date + ": " + msg );
+                        mHandler.obtainMessage(2, "Received at " + date + ": " + msg ).sendToTarget();
+                        /*ArrayList<Song> tmp = new ArrayList<Song>(ConnectedList.size());
+                        tmp.addAll(ConnectedList);
+                        SongAdapter songAdt = new SongAdapter(getActivity(), tmp);
+                        songs.setAdapter(songAdt);
 
-                        for (int i = 0; i < bytesAvailable; i++) {
-                            byte b = packetBytes[i];
-                            if (b == delimiter) {
-                                byte[] encodedBytes = new byte[readBufferPosition];
-                                System.arraycopy(readBuffer,0,encodedBytes,0,encodedBytes.length);
-                                final String data = new String(encodedBytes, "US-ASCII");
-                                readBufferPosition = 0;
-                                getActivity().runOnUiThread(new Runnable() {
-                                    public void run() {
-                                        Toast.makeText(getActivity(), "Date recieved: " + data, Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                                }
-                            else {
-                                readBuffer[readBufferPosition++] = b;
+                        getActivity().runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(getActivity(), "Mesage Recieved: ", Toast.LENGTH_SHORT).show();
                             }
-                        }
+                        });*/
+
                     }
                     getActivity().runOnUiThread(new Runnable() {
                         public void run() {
@@ -360,5 +398,62 @@ public class MiddleFragment extends Fragment {
         serverRun = false;
         clientRun = false;
     }
+    public void addEntry(String e){
+        listItems.add(e);
+        adpt.notifyDataSetChanged();
+    }
+    //-------------------Song stuff--------------------
+    /**
+     *
+     * @param obj the data object (song info, list of songs, or song file)
+     * @return the equivalent in a byte stream
+     * @throws IOException
+     */
+    private byte[] serialize(Object obj) throws IOException {
+        ByteArrayOutputStream b = new ByteArrayOutputStream();
+        ObjectOutputStream o = new ObjectOutputStream(b);
+        o.writeObject(obj);
+        return b.toByteArray();
+    }
+
+    /**
+     *
+     * @param bytes the byte stream obtained from the bluetooth connection
+     * @return the object corresponding to the data (song info, list of songs, or song file)
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private Object deserialize(byte[] bytes) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream b = new ByteArrayInputStream(bytes);
+        ObjectInputStream o = new ObjectInputStream(b);
+        return o.readObject();
+    }
+
+    // get a list of the songs info on the phone
+    private List<Song> getSongList() {
+        List<Song> songList = new ArrayList<Song>();
+        ContentResolver musicResolver = getActivity().getContentResolver();
+        Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+        if(musicCursor!=null && musicCursor.moveToFirst()){
+            //get columns
+            int titleColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media.TITLE);
+            int idColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media._ID);
+            int artistColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media.ARTIST);
+            //add songs to list
+            do {
+                long thisId = musicCursor.getLong(idColumn);
+                String thisTitle = musicCursor.getString(titleColumn);
+                String thisArtist = musicCursor.getString(artistColumn);
+                songList.add(new Song(thisId, thisTitle, thisArtist));
+            }
+            while (musicCursor.moveToNext());
+        }
+        return songList;
+    }
+
 }
 

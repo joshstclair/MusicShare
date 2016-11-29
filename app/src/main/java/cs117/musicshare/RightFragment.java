@@ -222,7 +222,7 @@ public class RightFragment extends Fragment implements WifiP2pManager.Connection
             // you'll want to create a client thread that connects to the group
             // owner.
         }
-        show_Message("IP:" + getIpAddress());
+        //show_Message("IP:" + getIpAddress());
     }
     public void updateList(){
         listC.setAdapter(null);
