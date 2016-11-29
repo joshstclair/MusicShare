@@ -2,6 +2,7 @@ package cs117.musicshare;
 
 
 import android.app.AlertDialog;
+import android.app.Application;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -40,8 +41,12 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
 import android.widget.AdapterView.OnItemClickListener;
 
+import org.apache.http.conn.util.InetAddressUtils;
+
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static android.os.Looper.getMainLooper;
@@ -156,6 +161,7 @@ public class RightFragment extends Fragment implements WifiP2pManager.Connection
     public void onConnectionInfoAvailable(final WifiP2pInfo info) {
         peers_Connect_list.clear();
         String groupOwnerAddress = info.groupOwnerAddress.getHostAddress();
+        InetAddress groupOwner = info.groupOwnerAddress;
 
         // After the group negotiation, we can determine the group owner.
         if (info.groupFormed && info.isGroupOwner) {
@@ -183,6 +189,8 @@ public class RightFragment extends Fragment implements WifiP2pManager.Connection
                             .show();;
                 }
             });
+            ((MyApplication) getActivity().getApplication()).setIP(null);
+            ((MyApplication) getActivity().getApplication()).setHost(true);
 
             // Do whatever tasks are specific to the group owner.
             // One common case is creating a server thread and accepting
@@ -208,10 +216,13 @@ public class RightFragment extends Fragment implements WifiP2pManager.Connection
                             .show();;
                 }
             });
+            ((MyApplication) getActivity().getApplication()).setIP(groupOwner);
+            ((MyApplication) getActivity().getApplication()).setHost(false);
             // The other device acts as the client. In this case,
             // you'll want to create a client thread that connects to the group
             // owner.
         }
+        show_Message("IP:" + getIpAddress());
     }
     public void updateList(){
         listC.setAdapter(null);
@@ -318,6 +329,67 @@ public class RightFragment extends Fragment implements WifiP2pManager.Connection
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    public static String getIpAddress() {
+        try {
+            List<NetworkInterface> interfaces = Collections
+                    .list(NetworkInterface.getNetworkInterfaces());
+
+            for (NetworkInterface intf : interfaces) {
+                if (!intf.getName().contains("p2p"))
+                    continue;
+
+                List<InetAddress> addrs = Collections.list(intf
+                        .getInetAddresses());
+
+                for (InetAddress addr : addrs) {
+                    // Log.v(TAG, "inside");
+
+                    if (!addr.isLoopbackAddress()) {
+                        // Log.v(TAG, "isnt loopback");
+                        String sAddr = addr.getHostAddress().toUpperCase();
+
+                        boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
+
+                        if (isIPv4) {
+                            if (sAddr.contains("192.168.49.")) {
+                                return sAddr;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            //don't handle this
+            return "";
+        } // for now eat exceptions
+        return "";
+    }
+
+    public static String getMACAddress(String interfaceName) {
+        try {
+            List<NetworkInterface> interfaces = Collections
+                    .list(NetworkInterface.getNetworkInterfaces());
+
+            for (NetworkInterface intf : interfaces) {
+                if (interfaceName != null) {
+                    if (!intf.getName().equalsIgnoreCase(interfaceName))
+                        continue;
+                }
+                byte[] mac = intf.getHardwareAddress();
+                if (mac == null)
+                    return "";
+                StringBuilder buf = new StringBuilder();
+                for (int idx = 0; idx < mac.length; idx++)
+                    buf.append(String.format("%02X:", mac[idx]));
+                if (buf.length() > 0)
+                    buf.deleteCharAt(buf.length() - 1);
+                return buf.toString();
+            }
+        } catch (Exception ex) {
+        } // for now eat exceptions
+        return "";
     }
 
     View view;
