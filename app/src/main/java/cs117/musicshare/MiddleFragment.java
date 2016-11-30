@@ -27,6 +27,7 @@ import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -76,7 +77,10 @@ public class MiddleFragment extends Fragment {
 
     private Button share;
     private Button send;
+    private Button sendChat;
     private ListView songs;
+    private ListView chatList;
+    private EditText chatBox;
 
     ProgressDialog loading;
     ThreadConnected myChannel;
@@ -103,10 +107,14 @@ public class MiddleFragment extends Fragment {
                 container, false);
         share = (Button) view.findViewById(R.id.share);
         send = (Button) view.findViewById(R.id.send);
+        sendChat = (Button) view.findViewById(R.id.sendChat);
         songs = (ListView) view.findViewById(R.id.song_list);
+        chatList = (ListView) view.findViewById(R.id.chat_list);
+        chatBox = (EditText) view.findViewById(R.id.chatBox);
 
         //------song list----------
-        //adpt = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, listItems);
+        adpt = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, listItems);
+        chatList.setAdapter(adpt);
         //songs.setAdapter(adpt);
 
         loading = new ProgressDialog(getActivity(), Theme_DeviceDefault_Dialog);
@@ -212,7 +220,7 @@ public class MiddleFragment extends Fragment {
                     socket.connect((new InetSocketAddress(communicationIP, port)), timeout);
                     getActivity().runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(getActivity(), "Connnected---client", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), "Connected---client", Toast.LENGTH_SHORT).show();
                         }
                     });
                     loading.dismiss();
@@ -240,6 +248,11 @@ public class MiddleFragment extends Fragment {
                             SongAdapter s1 = (SongAdapter) msg.obj;
                             songs.setAdapter(s1);
                             break;
+                        case 3:
+                            String s2 = (String) msg.obj;
+                            addEntry(s2 );
+                            break;
+
                         }
             }
         };
@@ -248,6 +261,8 @@ public class MiddleFragment extends Fragment {
     {
         songs.setVisibility(View.VISIBLE);
         send.setVisibility(View.VISIBLE);
+        sendChat.setVisibility(View.VISIBLE);
+        chatBox.setVisibility(View.VISIBLE);
         share.setVisibility(View.INVISIBLE);
 
         myChannel = new ThreadConnected();
@@ -257,6 +272,21 @@ public class MiddleFragment extends Fragment {
         sendDto = new DataTransferObject();
         sendDto.setSongListPayload(getSongList());
 
+        sendChat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String msg = chatBox.getText().toString();
+                byte[] b = msg.getBytes();
+                DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
+                String date = df.format(Calendar.getInstance().getTime());
+                addEntry("Sent at " + date + ": " + msg );
+                try {
+                    myChannel.write(b);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         send.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
                 String msg = "";
@@ -358,11 +388,17 @@ public class MiddleFragment extends Fragment {
 
                             getActivity().runOnUiThread(new Runnable() {
                                 public void run() {
-                                    Toast.makeText(getActivity(), "Mesage Recieved: "+ songAdt.getCount(), Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getActivity(), "Message Recieved: "+ songAdt.getCount(), Toast.LENGTH_SHORT).show();
                                 }
                             });
                             mHandler.obtainMessage(2, songAdt).sendToTarget();
                             //songs.setAdapter(songAdt);
+                        }
+                        else
+                        {
+                            final String msg = new String(packetBytes, "UTF-8");
+                            //addEntry("Received at " + date + ": " + msg );
+                            mHandler.obtainMessage(3, "Received at " + date + ": " + msg ).sendToTarget();
                         }
                         getActivity().runOnUiThread(new Runnable() {
                             public void run() {
