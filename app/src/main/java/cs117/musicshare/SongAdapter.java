@@ -4,6 +4,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import java.util.ArrayList;
+import java.util.List;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
@@ -15,7 +17,7 @@ import android.widget.TextView;
 
 public class SongAdapter extends BaseAdapter {
 
-    public SongAdapter(Context c, ArrayList<Song> theSongs){
+    public SongAdapter(Context c, List<Song> theSongs){
         songs=theSongs;
         songInf=LayoutInflater.from(c);
     }
@@ -55,6 +57,6 @@ public class SongAdapter extends BaseAdapter {
         return songLay;
     }
 
-    private ArrayList<Song> songs;
+    private List<Song> songs;
     private LayoutInflater songInf;
 }

@@ -1,11 +1,5 @@
 package cs117.musicshare;
 
-import android.util.Log;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-
 /**
  * Created by joshua on 10/31/16.
  */

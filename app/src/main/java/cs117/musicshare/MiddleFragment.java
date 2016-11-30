@@ -81,6 +81,8 @@ public class MiddleFragment extends Fragment {
     ProgressDialog loading;
     ThreadConnected myChannel;
 
+    DataTransferObject sendDto;
+    DataTransferObject receiveDto;
     List<Song> MysongList;
     List<Song> ConnectedList;
 
@@ -252,44 +254,35 @@ public class MiddleFragment extends Fragment {
         myChannel.start();
 
         //get music stuff ===========
-        MysongList = getSongList();
+        sendDto = new DataTransferObject();
+        sendDto.setSongListPayload(getSongList());
 
         send.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
+                String msg = "";
                 if(host == false) {
-                    /*try {
-                        myChannel.write(serialize(MysongList));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }*/
-                    String msg = "testing from client";
-                    byte[] b = msg.getBytes();
-                    DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
-                    String date = df.format(Calendar.getInstance().getTime());
-                    addEntry("Sent at " + date + ": " + msg );
-                    try {
-                        myChannel.write(b);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    msg = "testing from client";
                 }
-                else{
-                    String msg = "testing from server";
-                    byte[] b = msg.getBytes();
-                    DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
-                    String date = df.format(Calendar.getInstance().getTime());
-                    addEntry("Sent at " + date + ": " + msg );
-                    try {
-                        myChannel.write(b);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    /*try {
-                        myChannel.write(serialize(MysongList));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }*/
+                else {
+                    msg = "testing from server";
                 }
+
+                try {
+                    myChannel.write(serialize(sendDto));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                /*
+                byte[] b = msg.getBytes();
+                DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
+                String date = df.format(Calendar.getInstance().getTime());
+                addEntry("Sent at " + date + ": " + msg );
+                try {
+                    myChannel.write(b);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                */
             }
         });
 
@@ -335,32 +328,35 @@ public class MiddleFragment extends Fragment {
 
                         byte[] packetBytes = new byte[bytesAvailable];
                         connectedInputStream.read(packetBytes);
-                        /*
+
                         try {
-                            ConnectedList = (List<Song>) deserialize(packetBytes);
+                            receiveDto = (DataTransferObject) deserialize(packetBytes);
                         } catch (ClassNotFoundException e) {
                             e.printStackTrace();
-                        }*/
+                        }
+                        /*
                         final String msg = new String(packetBytes, "UTF-8");
                         getActivity().runOnUiThread(new Runnable() {
                             public void run() {
                                 Toast.makeText(getActivity(), "Mesage Recieved: "+ msg, Toast.LENGTH_SHORT).show();
                             }
                         });
+                        */
                         DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
                         String date = df.format(Calendar.getInstance().getTime());
-                        //addEntry("Received at " + date + ": " + msg );
-                        mHandler.obtainMessage(2, "Received at " + date + ": " + msg ).sendToTarget();
-                        /*ArrayList<Song> tmp = new ArrayList<Song>(ConnectedList.size());
-                        tmp.addAll(ConnectedList);
-                        SongAdapter songAdt = new SongAdapter(getActivity(), tmp);
-                        songs.setAdapter(songAdt);
 
+                        //addEntry("Received at " + date + ": " + msg );
+                        mHandler.obtainMessage(2, "Received at " + date + ": " + receiveDto.getPayloadFlag() ).sendToTarget();
+                        if (receiveDto.getPayloadFlag().equals(DataTransferObject.songList)) {
+                            ConnectedList = receiveDto.getSongListPayload();
+                            SongAdapter songAdt = new SongAdapter(getActivity(), ConnectedList);
+                            songs.setAdapter(songAdt);
+                        }
                         getActivity().runOnUiThread(new Runnable() {
                             public void run() {
                                 Toast.makeText(getActivity(), "Mesage Recieved: ", Toast.LENGTH_SHORT).show();
                             }
-                        });*/
+                        });
 
                     }
                     getActivity().runOnUiThread(new Runnable() {
