@@ -106,8 +106,8 @@ public class MiddleFragment extends Fragment {
         songs = (ListView) view.findViewById(R.id.song_list);
 
         //------song list----------
-        adpt = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, listItems);
-        songs.setAdapter(adpt);
+        //adpt = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, listItems);
+        //songs.setAdapter(adpt);
 
         loading = new ProgressDialog(getActivity(), Theme_DeviceDefault_Dialog);
         //new ProgressDialog.Builder(getActivity())
@@ -237,8 +237,8 @@ public class MiddleFragment extends Fragment {
                             transferData();
                             break;
                         case 2:
-                            String s1 = (String) msg.obj;
-                            addEntry(s1 );
+                            SongAdapter s1 = (SongAdapter) msg.obj;
+                            songs.setAdapter(s1);
                             break;
                         }
             }
@@ -299,12 +299,12 @@ public class MiddleFragment extends Fragment {
                 out = socket.getOutputStream();
                 final InputStream finalIn1 = in;
                 final OutputStream finalOut = out;
-                getActivity().runOnUiThread(new Runnable() {
+                /*getActivity().runOnUiThread(new Runnable() {
                     public void run() {
                         Toast.makeText(getActivity().getApplicationContext(), "***Got the <IN> streams ready:" + finalIn1, Toast.LENGTH_SHORT).show();
                         Toast.makeText(getActivity().getApplicationContext(), "***Got the <OUT> streams ready:" + finalOut, Toast.LENGTH_SHORT).show();
                     }
-                });
+                });*/
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -346,11 +346,23 @@ public class MiddleFragment extends Fragment {
                         String date = df.format(Calendar.getInstance().getTime());
 
                         //addEntry("Received at " + date + ": " + msg );
-                        mHandler.obtainMessage(2, "Received at " + date + ": " + receiveDto.getPayloadFlag() ).sendToTarget();
+                        //mHandler.obtainMessage(2, "Received at " + date + ": " + receiveDto.getPayloadFlag() ).sendToTarget();
+                       /* getActivity().runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(getActivity(), "Mesage Recieved: "+ receiveDto.getSongListPayload(), Toast.LENGTH_SHORT).show();
+                            }
+                        });*/
                         if (receiveDto.getPayloadFlag().equals(DataTransferObject.songList)) {
-                            ConnectedList = receiveDto.getSongListPayload();
-                            SongAdapter songAdt = new SongAdapter(getActivity(), ConnectedList);
-                            songs.setAdapter(songAdt);
+                            ConnectedList = new ArrayList<Song>(receiveDto.getSongListPayload());
+                            final SongAdapter songAdt = new SongAdapter(getActivity(), ConnectedList);
+
+                            getActivity().runOnUiThread(new Runnable() {
+                                public void run() {
+                                    Toast.makeText(getActivity(), "Mesage Recieved: "+ songAdt.getCount(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            mHandler.obtainMessage(2, songAdt).sendToTarget();
+                            //songs.setAdapter(songAdt);
                         }
                         getActivity().runOnUiThread(new Runnable() {
                             public void run() {
