@@ -51,13 +51,19 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     }
 
     public void songPicked(View view){
-        musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
-        musicSrv.playSong();
-        if(playbackPaused){
-            setController();
-            playbackPaused=false;
+        Toast.makeText(this, "MainActivity: Song would be played here", Toast.LENGTH_SHORT).show();
+        if (((MyApplication) this.getApplication()).getIsMiddle()) {
+            musicSrv.playSong();
         }
-        controller.show(0);
+        else {
+            musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
+            musicSrv.playSong();
+            if (playbackPaused) {
+                setController();
+                playbackPaused = false;
+            }
+            controller.show(0);
+        }
     }
 
     @Override

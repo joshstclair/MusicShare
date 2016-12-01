@@ -14,6 +14,7 @@ import android.util.Log;
 import java.util.Random;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.widget.Toast;
 
 /**
  * Created by joshua on 11/1/16.
@@ -94,20 +95,26 @@ public class MusicService extends Service implements
     }
 
     public void playSong(){
-        player.reset();
-        Song playSong = songs.get(songPosn);
-        songTitle=playSong.getTitle();
-        long currSong = playSong.getID();
-        Uri trackUri = ContentUris.withAppendedId(
-                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                currSong);
-        try{
-            player.setDataSource(getApplicationContext(), trackUri);
+        if (((MyApplication) this.getApplication()).getIsMiddle()) {
+            Toast.makeText(this, "Song would be played here", Toast.LENGTH_SHORT).show();
         }
-        catch(Exception e){
-            Log.e("MUSIC SERVICE", "Error setting data source", e);
+        else {
+            player.reset();
+            Song playSong = songs.get(songPosn);
+            songTitle=playSong.getTitle();
+            long currSong = playSong.getID();
+            Uri trackUri = ContentUris.withAppendedId(
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    currSong);
+            try{
+                player.setDataSource(getApplicationContext(), trackUri);
+            }
+            catch(Exception e){
+                Log.e("MUSIC SERVICE", "Error setting data source", e);
+            }
+            player.prepareAsync();
         }
-        player.prepareAsync();
+
     }
 
     public void setSong(int songIndex){

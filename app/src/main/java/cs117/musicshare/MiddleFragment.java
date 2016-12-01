@@ -37,7 +37,9 @@ import android.widget.TextView;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -53,6 +55,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import android.os.*;
@@ -192,7 +195,7 @@ public class MiddleFragment extends Fragment {
                 }
                 getActivity().runOnUiThread(new Runnable() {
                     public void run() {
-                        Toast.makeText(getActivity(), "Connnected----server", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), "Connected----server", Toast.LENGTH_SHORT).show();
                     }
                 });
                 loading.dismiss();
@@ -251,6 +254,7 @@ public class MiddleFragment extends Fragment {
                     break;
                 //song list
                 case 2:
+                    ((MyApplication) getActivity().getApplication()).setIsMiddle(true);
                     SongAdapter s1 = (SongAdapter) msg.obj;
                     songs.setAdapter(s1);
                     break;
@@ -259,12 +263,22 @@ public class MiddleFragment extends Fragment {
                     String s2 = (String) msg.obj;
                     addEntry(s2);
                     break;
-                //got song id, need to send song file
+                // got song id, need to send song file
                 case 4:
-                    File song1 = (File) msg.obj;
-                    break;
-                //recieved song file-> need to store + play
+                    File songFileToSend = (File) msg.obj;
+                    try {
+                        myChannel.write(serializeFile(songFileToSend.getPath()));
+                    }
+                    catch (IOException e) {
+                        Toast.makeText(getActivity(), "Error serializing file", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+
+                //received song file-> need to store + play
                 case 5:
+                    ((MyApplication) getActivity().getApplication()).setIsMiddle(true);
+                    byte[] songFileReceived = (byte[]) msg.obj;
+                    saveSong(songFileReceived);
                     break;
                 }
             }
@@ -344,6 +358,19 @@ public class MiddleFragment extends Fragment {
                 }
                 */
             }
+        });
+        songs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //try {
+                    //myChannel.write(serialize(parent.getAdapter().getItem(position)));
+                    Toast.makeText(getActivity(), "Sending song request "+ parent.getAdapter().getItem(position), Toast.LENGTH_SHORT).show();
+//                } catch (IOException e) {
+//                    Toast.makeText(getActivity(), "Error with sending song request "+ parent.getAdapter().getItem(position), Toast.LENGTH_SHORT).show();
+//                    e.printStackTrace();
+//                }
+            }
+
         });
 
     }
@@ -435,16 +462,15 @@ public class MiddleFragment extends Fragment {
                                 getActivity().runOnUiThread(new Runnable() {
                                     public void run() {
                                         Toast.makeText(getActivity(), "Songs Recieved: " + songAdt.getCount(), Toast.LENGTH_SHORT).show();
+
                                     }
                                 });
                                 mHandler.obtainMessage(2, songAdt).sendToTarget();
                                 //songs.setAdapter(songAdt);
                             } else if (receiveDto.getPayloadFlag().equals(DataTransferObject.song)) {
                                 mHandler.obtainMessage(4, getSongFileById(receiveDto.getSongPayload().getID())).sendToTarget();
-                                // SEND getSongFileById(receiveDto.getSongPayload().getID());
-                                // Put in Intent object or send as stream of bytes
                             } else if (receiveDto.getPayloadFlag().equals(DataTransferObject.songFile)) {
-                                // PLAY songFile
+                                mHandler.obtainMessage(5, receiveDto.getSongFilePayload()).sendToTarget();
                             }
                         }
                         getActivity().runOnUiThread(new Runnable() {
@@ -464,7 +490,7 @@ public class MiddleFragment extends Fragment {
                 catch (IOException ex) {
                     getActivity().runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(getActivity(), "Could not recieve data... ", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), "Could not receive data... ", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -524,9 +550,36 @@ public class MiddleFragment extends Fragment {
         File songFile = new File(path);
         return songFile;
     }
+
+    // Save song file from input stream to phone's external storage
+    private void saveSong(byte[] songFile) {
+
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/MusicShare/TransferredSongs");
+        myDir.mkdirs();
+        Random generator = new Random();
+        int n = 10000;
+        n = generator.nextInt(n);
+        String fname = "Song-"+ n +".jpg";
+        File file = new File (myDir, fname);
+        if (file.exists ())
+            file.delete ();
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            out.write(songFile);
+            Toast.makeText(getActivity(), "Saved song: " + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+            out.flush();
+            out.close();
+
+        } catch (Exception e) {
+            Toast.makeText(getActivity(), "Error with saving song: " + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+            file.delete ();
+            e.printStackTrace();
+        }
+    }
     /**
      *
-     * @param obj the data object (song info, list of songs, or song file)
+     * @param obj the data object (song info, list of songs)
      * @return the equivalent in a byte stream
      * @throws IOException
      */
@@ -535,6 +588,26 @@ public class MiddleFragment extends Fragment {
         ObjectOutputStream o = new ObjectOutputStream(b);
         o.writeObject(obj);
         return b.toByteArray();
+    }
+    /**
+     *
+     * @param path the path to the song file
+     * @return the equivalent in a byte stream
+     * @throws IOException
+     */
+    public byte[] serializeFile(String path) throws IOException {
+
+        FileInputStream fis = new FileInputStream(path);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] b = new byte[1024];
+
+        for (int readNum; (readNum = fis.read(b)) != -1;) {
+            bos.write(b, 0, readNum);
+        }
+
+        byte[] bytes = bos.toByteArray();
+
+        return bytes;
     }
 
     /**

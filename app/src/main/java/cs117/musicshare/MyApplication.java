@@ -12,6 +12,14 @@ public class MyApplication extends Application {
 
     private InetAddress ip_address = null;
     private boolean host = false;
+    private boolean myMiddleFrag = false;
+
+    public boolean getIsMiddle(){
+        return myMiddleFrag;
+    }
+    public void setIsMiddle(boolean set){
+        myMiddleFrag = set;
+    }
 
     public InetAddress getIP() {
         return ip_address;
