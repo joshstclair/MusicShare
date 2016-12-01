@@ -34,6 +34,8 @@ import android.widget.TextView;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -377,45 +379,50 @@ public class MiddleFragment extends Fragment {
                             String resultMsg = sb.toString();
                             mHandler.obtainMessage(3, "Them: " + resultMsg).sendToTarget();
                         }
-                        else{
-                        try {
-                            receiveDto = (DataTransferObject) deserialize(packetBytes);
-                        } catch (ClassNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                        /*
-                        final String msg = new String(packetBytes, "UTF-8");
-                        getActivity().runOnUiThread(new Runnable() {
-                            public void run() {
-                                Toast.makeText(getActivity(), "Mesage Recieved: "+ msg, Toast.LENGTH_SHORT).show();
+                        else {
+                            try {
+                                receiveDto = (DataTransferObject) deserialize(packetBytes);
+                            } catch (ClassNotFoundException e) {
+                                e.printStackTrace();
                             }
-                        });
-                        */
+                            /*
+                            final String msg = new String(packetBytes, "UTF-8");
+                            getActivity().runOnUiThread(new Runnable() {
+                                public void run() {
+                                    Toast.makeText(getActivity(), "Message Received: "+ msg, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            */
 
-                        DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
-                        String date = df.format(Calendar.getInstance().getTime());
+                            DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
+                            String date = df.format(Calendar.getInstance().getTime());
 
-                        //addEntry("Received at " + date + ": " + msg );
-                        //mHandler.obtainMessage(2, "Received at " + date + ": " + receiveDto.getPayloadFlag() ).sendToTarget();
-                       /* getActivity().runOnUiThread(new Runnable() {
+                            //addEntry("Received at " + date + ": " + msg );
+                            //mHandler.obtainMessage(2, "Received at " + date + ": " + receiveDto.getPayloadFlag() ).sendToTarget();
+                            /* getActivity().runOnUiThread(new Runnable() {
                             public void run() {
                                 Toast.makeText(getActivity(), "Mesage Recieved: "+ receiveDto.getSongListPayload(), Toast.LENGTH_SHORT).show();
                             }
-                        });*/
+                            });*/
 
-                        if (receiveDto.getPayloadFlag().equals(DataTransferObject.songList)) {
-                            ConnectedList = new ArrayList<Song>(receiveDto.getSongListPayload());
-                            final SongAdapter songAdt = new SongAdapter(getActivity(), ConnectedList);
+                            if (receiveDto.getPayloadFlag().equals(DataTransferObject.songList)) {
+                                ConnectedList = new ArrayList<Song>(receiveDto.getSongListPayload());
+                                final SongAdapter songAdt = new SongAdapter(getActivity(), ConnectedList);
 
-                            getActivity().runOnUiThread(new Runnable() {
-                                public void run() {
-                                    Toast.makeText(getActivity(), "Message Recieved: "+ songAdt.getCount(), Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            mHandler.obtainMessage(2, songAdt).sendToTarget();
-                            //songs.setAdapter(songAdt);
-                        }}
-
+                                getActivity().runOnUiThread(new Runnable() {
+                                    public void run() {
+                                        Toast.makeText(getActivity(), "Message Recieved: " + songAdt.getCount(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                                mHandler.obtainMessage(2, songAdt).sendToTarget();
+                                //songs.setAdapter(songAdt);
+                            } else if (receiveDto.getPayloadFlag().equals(DataTransferObject.song)) {
+                                // SEND getSongFileById(receiveDto.getSongPayload().getID());
+                                // Put in Intent object or send as stream of bytes
+                            } else if (receiveDto.getPayloadFlag().equals(DataTransferObject.songFile)) {
+                                // PLAY songFile
+                            }
+                        }
                         getActivity().runOnUiThread(new Runnable() {
                             public void run() {
                                 Toast.makeText(getActivity(), "Message Received: ", Toast.LENGTH_SHORT).show();
@@ -466,6 +473,33 @@ public class MiddleFragment extends Fragment {
         adpt.notifyDataSetChanged();
     }
     //-------------------Song stuff--------------------
+
+    private File getSongFileById(long id) throws FileNotFoundException {
+        ContentResolver musicResolver = getActivity().getContentResolver();
+        Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+        String path = "";
+
+        if(musicCursor!=null && musicCursor.moveToFirst()) {
+            //get columns
+            int idColumn = musicCursor.getColumnIndex(
+                    android.provider.MediaStore.Audio.Media._ID);
+            int pathColumn = musicCursor.getColumnIndex(
+                    android.provider.MediaStore.Audio.Media.DATA);
+            // search for corresponding song file
+            do {
+                if (id == musicCursor.getLong(idColumn)) {
+                    path = musicCursor.getString(pathColumn);
+                    break;
+                }
+            }
+            while (musicCursor.moveToNext());
+        }
+        if (path.isEmpty())
+            throw new FileNotFoundException("Cannot find song with id " + id);
+        File songFile = new File(path);
+        return songFile;
+    }
     /**
      *
      * @param obj the data object (song info, list of songs, or song file)
@@ -500,12 +534,12 @@ public class MiddleFragment extends Fragment {
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
         if(musicCursor!=null && musicCursor.moveToFirst()){
             //get columns
-            int titleColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media.TITLE);
-            int idColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media._ID);
-            int artistColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media.ARTIST);
+            int titleColumn = musicCursor.getColumnIndex(
+                    android.provider.MediaStore.Audio.Media.TITLE);
+            int idColumn = musicCursor.getColumnIndex(
+                    android.provider.MediaStore.Audio.Media._ID);
+            int artistColumn = musicCursor.getColumnIndex(
+                    android.provider.MediaStore.Audio.Media.ARTIST);
             //add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
