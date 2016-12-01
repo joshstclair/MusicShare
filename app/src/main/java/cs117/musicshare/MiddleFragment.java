@@ -19,6 +19,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.util.Log;
+import android.util.StringBuilderPrinter;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -260,6 +261,7 @@ public class MiddleFragment extends Fragment {
     public void transferData()
     {
         songs.setVisibility(View.VISIBLE);
+        chatList.setVisibility(View.VISIBLE);
         send.setVisibility(View.VISIBLE);
         sendChat.setVisibility(View.VISIBLE);
         chatBox.setVisibility(View.VISIBLE);
@@ -275,11 +277,14 @@ public class MiddleFragment extends Fragment {
         sendChat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String msg = chatBox.getText().toString();
+                String msg = "m" + chatBox.getText().toString();
                 byte[] b = msg.getBytes();
-                DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
-                String date = df.format(Calendar.getInstance().getTime());
-                addEntry("Sent at " + date + ": " + msg );
+                StringBuilder sb = new StringBuilder(msg);
+                sb.deleteCharAt(0);
+                String resultMsg = sb.toString();
+                //DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
+                //String date = df.format(Calendar.getInstance().getTime());
+                addEntry(/*"Sent at " + date + ": " */ "You: " + resultMsg );
                 try {
                     myChannel.write(b);
                 } catch (IOException e) {
@@ -359,6 +364,20 @@ public class MiddleFragment extends Fragment {
                         byte[] packetBytes = new byte[bytesAvailable];
                         connectedInputStream.read(packetBytes);
 
+                        final String msg = new String(packetBytes, "UTF-8");
+                        /*getActivity().runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(getActivity(), "Mesage Recieved: "+ msg, Toast.LENGTH_SHORT).show();
+                            }
+                        });*/
+                        if (msg.charAt(0) == 'm')
+                        {
+                            StringBuilder sb = new StringBuilder(msg);
+                            sb.deleteCharAt(0);
+                            String resultMsg = sb.toString();
+                            mHandler.obtainMessage(3, "Them: " + resultMsg).sendToTarget();
+                        }
+                        else{
                         try {
                             receiveDto = (DataTransferObject) deserialize(packetBytes);
                         } catch (ClassNotFoundException e) {
@@ -372,6 +391,7 @@ public class MiddleFragment extends Fragment {
                             }
                         });
                         */
+
                         DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
                         String date = df.format(Calendar.getInstance().getTime());
 
@@ -382,6 +402,7 @@ public class MiddleFragment extends Fragment {
                                 Toast.makeText(getActivity(), "Mesage Recieved: "+ receiveDto.getSongListPayload(), Toast.LENGTH_SHORT).show();
                             }
                         });*/
+
                         if (receiveDto.getPayloadFlag().equals(DataTransferObject.songList)) {
                             ConnectedList = new ArrayList<Song>(receiveDto.getSongListPayload());
                             final SongAdapter songAdt = new SongAdapter(getActivity(), ConnectedList);
@@ -393,18 +414,14 @@ public class MiddleFragment extends Fragment {
                             });
                             mHandler.obtainMessage(2, songAdt).sendToTarget();
                             //songs.setAdapter(songAdt);
-                        }
-                        else
-                        {
-                            final String msg = new String(packetBytes, "UTF-8");
-                            //addEntry("Received at " + date + ": " + msg );
-                            mHandler.obtainMessage(3, "Received at " + date + ": " + msg ).sendToTarget();
-                        }
+                        }}
+
                         getActivity().runOnUiThread(new Runnable() {
                             public void run() {
-                                Toast.makeText(getActivity(), "Mesage Recieved: ", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), "Message Received: ", Toast.LENGTH_SHORT).show();
                             }
                         });
+
 
                     }
                     getActivity().runOnUiThread(new Runnable() {
@@ -429,7 +446,7 @@ public class MiddleFragment extends Fragment {
             connectedOutputStream.write(buffer);
             getActivity().runOnUiThread(new Runnable() {
                 public void run() {
-                    Toast.makeText(getActivity(), "Date sending... ", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Sending data... ", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -445,7 +462,7 @@ public class MiddleFragment extends Fragment {
         clientRun = false;
     }
     public void addEntry(String e){
-        listItems.add(e);
+        listItems.add(0,e);
         adpt.notifyDataSetChanged();
     }
     //-------------------Song stuff--------------------
