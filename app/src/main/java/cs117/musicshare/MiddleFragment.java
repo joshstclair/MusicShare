@@ -442,7 +442,7 @@ public class MiddleFragment extends Fragment {
                     }
                     getActivity().runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(getActivity(), "0 bytes available: ", Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(getActivity(), "0 bytes available: ", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
