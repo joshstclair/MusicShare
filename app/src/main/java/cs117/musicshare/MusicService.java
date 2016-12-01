@@ -2,7 +2,10 @@ package cs117.musicshare;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Environment;
 import android.os.IBinder;
+
+import java.io.File;
 import java.util.ArrayList;
 import android.content.ContentUris;
 import android.media.AudioManager;
@@ -96,7 +99,18 @@ public class MusicService extends Service implements
 
     public void playSong(){
         if (((MyApplication) this.getApplication()).getIsMiddle()) {
-            Toast.makeText(this, "Song would be played here", Toast.LENGTH_SHORT).show();
+            player.reset();
+            String root = Environment.getExternalStorageDirectory().toString();
+            File myDir = new File(root + "/MusicShare/TransferredSongs");
+            String path = myDir + "/Song-0.mp3";
+            File f = new File(path);
+            try{
+                player.setDataSource(getApplicationContext(), Uri.fromFile(f));
+            }
+            catch(Exception e){
+                Log.e("MUSIC SERVICE", "Error setting data source", e);
+            }
+            player.prepareAsync();
         }
         else {
             player.reset();

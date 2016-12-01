@@ -28,7 +28,7 @@ public class DataTransferObject implements Serializable {
         this.songListPayload = songListPayload;
     }
 
-    public void setSongFilePayload(File songFilePayload) {
+    public void setSongFilePayload(byte[] songFilePayload) {
         payloadFlag = songFile;
         this.songFilePayload = songFilePayload;
     }
@@ -39,7 +39,7 @@ public class DataTransferObject implements Serializable {
     public List<Song> getSongListPayload() {
         return songListPayload;
     }
-    public File getSongFilePayload() {
+    public byte[] getSongFilePayload() {
         return songFilePayload;
     }
     public String getPayloadFlag() {
@@ -49,6 +49,6 @@ public class DataTransferObject implements Serializable {
     private String payloadFlag;
     private Song songPayload;
     private List<Song> songListPayload;
-    private File songFilePayload;
+    private byte[] songFilePayload;
 
 }

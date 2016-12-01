@@ -10,8 +10,10 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -53,6 +55,17 @@ public class LeftFragment extends Fragment {
         });
         SongAdapter songAdt = new SongAdapter(getActivity(), songList);
         songView.setAdapter(songAdt);
+
+        //listener
+        songView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                MainActivity activity = (MainActivity) getActivity();
+                activity.songPicked(view);
+
+            }
+
+        });
         return f1;
 
         //return inflater.inflate(R.layout.fragment_left, container, false);

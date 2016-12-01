@@ -51,9 +51,13 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     }
 
     public void songPicked(View view){
-        Toast.makeText(this, "MainActivity: Song would be played here", Toast.LENGTH_SHORT).show();
         if (((MyApplication) this.getApplication()).getIsMiddle()) {
             musicSrv.playSong();
+            if (playbackPaused) {
+                setController();
+                playbackPaused = false;
+            }
+            controller.show(0);
         }
         else {
             musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
@@ -241,7 +245,9 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
             MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
             musicSrv = binder.getService();
             musicSrv.setList(songList);
+            ((MyApplication) getApplication()).setSharedMusicServ(musicSrv);
             musicBound = true;
+
         }
 
         @Override
