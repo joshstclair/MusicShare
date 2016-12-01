@@ -11,6 +11,7 @@ import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.util.Log;
 import android.util.StringBuilderPrinter;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -284,22 +286,35 @@ public class MiddleFragment extends Fragment {
         sendDto = new DataTransferObject();
         sendDto.setSongListPayload(getSongList());
 
-        sendChat.setOnClickListener(new View.OnClickListener() {
+        sendChat.setOnTouchListener( new View.OnTouchListener() {
+
             @Override
-            public void onClick(View view) {
-                String msg = "m" + chatBox.getText().toString();
-                byte[] b = msg.getBytes();
-                StringBuilder sb = new StringBuilder(msg);
-                sb.deleteCharAt(0);
-                String resultMsg = sb.toString();
-                //DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
-                //String date = df.format(Calendar.getInstance().getTime());
-                addEntry(/*"Sent at " + date + ": " */ "You: " + resultMsg );
-                try {
-                    myChannel.write(b);
-                } catch (IOException e) {
-                    e.printStackTrace();
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch(motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        // PRESSED
+                        sendChat.setTextColor(Color.BLACK);
+                        String msg = "m" + chatBox.getText().toString();
+                        byte[] b = msg.getBytes();
+                        StringBuilder sb = new StringBuilder(msg);
+                        sb.deleteCharAt(0);
+                        String resultMsg = sb.toString();
+                        //DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss");
+                        //String date = df.format(Calendar.getInstance().getTime());
+                        addEntry(/*"Sent at " + date + ": " */ "You: " + resultMsg );
+                        try {
+                            myChannel.write(b);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        chatBox.getText().clear();
+                        return true; // if you want to handle the touch event
+                    case MotionEvent.ACTION_UP:
+                        sendChat.setTextColor(Color.parseColor("#d3d3d3"));
+                        // RELEASED
+                        return true; // if you want to handle the touch event
                 }
+                return false;
             }
         });
         send.setOnClickListener(new View.OnClickListener() {
@@ -363,7 +378,7 @@ public class MiddleFragment extends Fragment {
             byte[] readBuffer = new byte[1024];
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(1000);
                     /*readBufferPosition = connectedInputStream.read(readBuffer);
                     final int finalBytes = readBufferPosition;
                     mHandler.obtainMessage(2, finalBytes, -1, readBuffer).sendToTarget();*/
@@ -419,7 +434,7 @@ public class MiddleFragment extends Fragment {
 
                                 getActivity().runOnUiThread(new Runnable() {
                                     public void run() {
-                                        Toast.makeText(getActivity(), "Message Recieved: " + songAdt.getCount(), Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getActivity(), "Songs Recieved: " + songAdt.getCount(), Toast.LENGTH_SHORT).show();
                                     }
                                 });
                                 mHandler.obtainMessage(2, songAdt).sendToTarget();

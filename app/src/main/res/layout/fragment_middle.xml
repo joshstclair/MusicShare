@@ -15,7 +15,7 @@
         android:layout_width="fill_parent"
         android:layout_weight="0.20"
         android:visibility="invisible"
-        android:layout_height="300dp">
+        android:layout_height="340dp">
     </ListView>
 
     <Button
@@ -50,11 +50,13 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:visibility="invisible"
-        android:id="@+id/sendChat" />
+        android:id="@+id/sendChat"
+        android:background="#ffffff"
+        android:layout_below="@+id/chat_list"
+        android:textColor="#d3d3d3" />
 
     <EditText
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:inputType="textPersonName"
         android:ems="10"
         android:id="@+id/chatBox"
@@ -63,5 +65,12 @@
         android:layout_alignParentLeft="true"
         android:visibility="invisible"
         android:layout_alignParentStart="true"
-        android:hint="Enter text here" />
+        android:background="@drawable/textbubble3"
+        android:hint="Enter text here"
+        android:layout_toLeftOf="@+id/sendChat"
+        android:layout_toStartOf="@+id/sendChat"
+        android:gravity="center_vertical|center_horizontal"
+        android:layout_height="50dp">
+        <requestFocus />
+    </EditText>
 </RelativeLayout>
