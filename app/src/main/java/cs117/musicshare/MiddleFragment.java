@@ -375,11 +375,11 @@ public class MiddleFragment extends Fragment {
                         connectedInputStream.read(packetBytes);
 
                         final String msg = new String(packetBytes, "UTF-8");
-                        getActivity().runOnUiThread(new Runnable() {
+                        /*getActivity().runOnUiThread(new Runnable() {
                             public void run() {
                                 Toast.makeText(getActivity(), "Mesage Recieved: "+ msg, Toast.LENGTH_SHORT).show();
                             }
-                        });
+                        });*/
                         if (msg.charAt(0) == 'm')
                         {
                             StringBuilder sb = new StringBuilder(msg);
