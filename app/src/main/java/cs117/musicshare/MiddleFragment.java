@@ -244,19 +244,27 @@ public class MiddleFragment extends Fragment {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 //Write to device
-                        case 1:
-                            transferData();
-                            break;
-                        case 2:
-                            SongAdapter s1 = (SongAdapter) msg.obj;
-                            songs.setAdapter(s1);
-                            break;
-                        case 3:
-                            String s2 = (String) msg.obj;
-                            addEntry(s2 );
-                            break;
-
-                        }
+                case 1:
+                    transferData();
+                    break;
+                //song list
+                case 2:
+                    SongAdapter s1 = (SongAdapter) msg.obj;
+                    songs.setAdapter(s1);
+                    break;
+                //chat
+                case 3:
+                    String s2 = (String) msg.obj;
+                    addEntry(s2);
+                    break;
+                //got song id, need to send song file
+                case 4:
+                    File song1 = (File) msg.obj;
+                    break;
+                //recieved song file-> need to store + play
+                case 5:
+                    break;
+                }
             }
         };
     //-----------data transfer--------------------
@@ -367,11 +375,11 @@ public class MiddleFragment extends Fragment {
                         connectedInputStream.read(packetBytes);
 
                         final String msg = new String(packetBytes, "UTF-8");
-                        /*getActivity().runOnUiThread(new Runnable() {
+                        getActivity().runOnUiThread(new Runnable() {
                             public void run() {
                                 Toast.makeText(getActivity(), "Mesage Recieved: "+ msg, Toast.LENGTH_SHORT).show();
                             }
-                        });*/
+                        });
                         if (msg.charAt(0) == 'm')
                         {
                             StringBuilder sb = new StringBuilder(msg);
@@ -417,6 +425,7 @@ public class MiddleFragment extends Fragment {
                                 mHandler.obtainMessage(2, songAdt).sendToTarget();
                                 //songs.setAdapter(songAdt);
                             } else if (receiveDto.getPayloadFlag().equals(DataTransferObject.song)) {
+                                mHandler.obtainMessage(4, getSongFileById(receiveDto.getSongPayload().getID())).sendToTarget();
                                 // SEND getSongFileById(receiveDto.getSongPayload().getID());
                                 // Put in Intent object or send as stream of bytes
                             } else if (receiveDto.getPayloadFlag().equals(DataTransferObject.songFile)) {
