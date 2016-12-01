@@ -16,8 +16,18 @@ public class MusicController extends MediaController {
         this.c = c;
     }
 
-    public void hide(){}
+    //public void hide(){}
+    public int mTimeout = 4000;
 
+    @Override
+    public void show() {
+        show(mTimeout);
+    }
+
+    @Override
+    public void show(int timeout) {
+        super.show(mTimeout);
+    }
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int keyCode = event.getKeyCode();

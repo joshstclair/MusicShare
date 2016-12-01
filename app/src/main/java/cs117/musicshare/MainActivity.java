@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.MotionEvent;
 import android.widget.ListView;
 import android.os.IBinder;
 import android.content.ComponentName;
@@ -22,6 +23,7 @@ import android.view.View;
 import android.widget.MediaController.MediaPlayerControl;
 
 import android.support.design.widget.*;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements MediaPlayerControl {
 
@@ -258,6 +260,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
         controller.setMediaPlayer(this);
         controller.setAnchorView(findViewById(R.id.song_list));
         controller.setEnabled(true);
+
     }
 
     private void playNext(){
